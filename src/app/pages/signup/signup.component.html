@@ -1,0 +1,259 @@
+
+<div class="signup-page">
+  <div class="signup-container">
+
+    <!-- Left Branding Panel -->
+    <div class="branding-panel">
+      <div class="brand-header">
+        <div class="brand-icon">C</div>
+        <h1>CRM Portal</h1>
+      </div>
+
+      <div class="brand-description">
+        <h2>Grow Your Business</h2>
+        <p>
+          Create your account and start managing your
+          leads, customers and business growth.
+        </p>
+      </div>
+
+      <div class="feature-list">
+        <div class="feature-item">
+          <span class="feature-icon">♧</span>
+          <span>Manage Leads</span>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon">↗</span>
+          <span>Track Sales</span>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon">♙</span>
+          <span>Build Relationships</span>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon">◇</span>
+          <span>Grow Your Business</span>
+        </div>
+      </div>
+
+      <div class="dashboard-illustration">
+        <div class="dashboard-window">
+          <div class="window-header">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+
+          <div class="dashboard-content">
+            <div class="dashboard-sidebar">
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+
+            <div class="dashboard-main">
+              <div class="dashboard-line"></div>
+              <div class="dashboard-line short"></div>
+
+              <div class="chart">
+                <div class="bar bar-one"></div>
+                <div class="bar bar-two"></div>
+                <div class="bar bar-three"></div>
+                <div class="bar bar-four"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="floating-card">✓ Customer Growth</div>
+      </div>
+
+      <div class="branding-footer">
+        Smart CRM. Better Relationships. More Growth.
+      </div>
+    </div>
+
+    <!-- Right Signup Form -->
+    <div class="form-panel">
+
+      <div class="form-heading">
+        <h2>Create Your Account</h2>
+        <p>Join CRM Portal and take your business to the next level.</p>
+      </div>
+
+      <div class="alert alert-danger" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <div class="alert alert-success" *ngIf="successMessage">
+        {{ successMessage }}
+      </div>
+
+      <form
+        (ngSubmit)="onSignup()"
+        #signupForm="ngForm"
+        novalidate>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="firstName">First Name</label>
+            <input
+              id="firstName"
+              type="text"
+              class="form-control"
+              name="firstName"
+              [(ngModel)]="firstName"
+              #firstNameInput="ngModel"
+              placeholder="Enter your first name"
+              required
+              maxlength="50">
+
+            <small class="field-error"
+              *ngIf="firstNameInput.invalid && firstNameInput.touched">
+              First name is required.
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label for="lastName">Last Name</label>
+            <input
+              id="lastName"
+              type="text"
+              class="form-control"
+              name="lastName"
+              [(ngModel)]="lastName"
+              #lastNameInput="ngModel"
+              placeholder="Enter your last name"
+              required
+              maxlength="50">
+
+            <small class="field-error"
+              *ngIf="lastNameInput.invalid && lastNameInput.touched">
+              Last name is required.
+            </small>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <div class="input-with-icon">
+            <span class="input-icon">✉</span>
+            <input
+              id="email"
+              type="email"
+              class="form-control"
+              name="email"
+              [(ngModel)]="email"
+              #emailInput="ngModel"
+              placeholder="Enter your email address"
+              required
+              email>
+          </div>
+
+          <small class="field-error"
+            *ngIf="emailInput.invalid && emailInput.touched">
+            Please enter a valid email address.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label for="mobile">Mobile Number</label>
+          <div class="input-with-icon">
+            <span class="input-icon">☎</span>
+            <input
+              id="mobile"
+              type="tel"
+              class="form-control"
+              name="mobile"
+              [(ngModel)]="mobile"
+              #mobileInput="ngModel"
+              placeholder="Enter your mobile number"
+              required
+              pattern="[0-9]{10}"
+              maxlength="10">
+          </div>
+
+          <small class="field-error"
+            *ngIf="mobileInput.invalid && mobileInput.touched">
+            Enter a valid 10-digit mobile number.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="input-with-icon">
+            <span class="input-icon">♙</span>
+            <input
+              id="password"
+              type="password"
+              class="form-control"
+              name="password"
+              [(ngModel)]="password"
+              #passwordInput="ngModel"
+              placeholder="Create a password (min. 8 characters)"
+              required
+              minlength="8">
+          </div>
+
+          <small class="field-error"
+            *ngIf="passwordInput.invalid && passwordInput.touched">
+            Password must contain at least 8 characters.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <div class="input-with-icon">
+            <span class="input-icon">♙</span>
+            <input
+              id="confirmPassword"
+              type="password"
+              class="form-control"
+              name="confirmPassword"
+              [(ngModel)]="confirmPassword"
+              #confirmPasswordInput="ngModel"
+              placeholder="Confirm your password"
+              required>
+          </div>
+
+          <small class="field-error"
+            *ngIf="confirmPasswordInput.touched &&
+                   password !== confirmPassword">
+            Passwords do not match.
+          </small>
+        </div>
+
+        <button
+          type="submit"
+          class="create-account-btn"
+          [disabled]="signupForm.invalid ||
+                      password !== confirmPassword">
+
+          Create Account
+          <span class="button-arrow">→</span>
+        </button>
+
+      </form>
+
+      <div class="divider">
+        <span></span>
+        <small>OR</small>
+        <span></span>
+      </div>
+
+      <p class="login-text">
+        Already have an account?
+        <a routerLink="/login">Login</a>
+      </p>
+
+      <p class="security-text">
+        🔒 Secure access to your CRM workspace
+      </p>
+
+    </div>
+  </div>
+</div>

@@ -1,0 +1,130 @@
+
+<div class="sales-users-page">
+
+  <header class="page-header">
+    <div>
+      <h1>Sales Users</h1>
+      <p>Manage and view all users assigned to the Sales role.</p>
+    </div>
+
+    <div class="header-count">
+      <span>Total Sales Users</span>
+      <strong>{{ salesUsers.length }}</strong>
+    </div>
+  </header>
+
+  <!-- Search and Filters -->
+  <section class="filter-card">
+    <div class="search-box">
+      <span>⌕</span>
+      <input
+        type="search"
+        name="salesUserSearch"
+        [(ngModel)]="searchText"
+        placeholder="Search by name, email, mobile or ID..."
+        autocomplete="off">
+    </div>
+
+    <div class="status-filter">
+      <label for="userStatus">Status</label>
+      <select
+        id="userStatus"
+        name="userStatus"
+        [(ngModel)]="selectedStatus">
+        <option value="ALL">All Statuses</option>
+        <option value="ACTIVE">Active</option>
+        <option value="INACTIVE">Inactive</option>
+      </select>
+    </div>
+
+    <button
+      type="button"
+      class="reset-button"
+      (click)="searchText = ''; selectedStatus = 'ALL'">
+      Reset
+    </button>
+  </section>
+
+  <div class="loading-message" *ngIf="isLoading">
+    Loading Sales Users...
+  </div>
+
+  <div class="error-message" *ngIf="errorMessage">
+    {{ errorMessage }}
+    <button type="button" (click)="loadSalesUsers()">Retry</button>
+  </div>
+
+  <section class="table-card" *ngIf="!isLoading && !errorMessage">
+
+    <div class="table-heading">
+      <div>
+        <h2>Sales Team Directory</h2>
+        <p>
+          Showing {{ filteredSalesUsers.length }}
+          of {{ salesUsers.length }} users
+        </p>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Sales User</th>
+            <th>Email</th>
+            <th>Mobile</th>
+            <th>Status</th>
+            <th>Role</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let user of filteredSalesUsers">
+            <td>#{{ user.id }}</td>
+
+            <td>
+              <div class="user-name">
+                <span class="user-avatar">
+                  {{ (user.firstName || '?').charAt(0).toUpperCase() }}
+                </span>
+               
+<button
+  type="button"
+  class="sales-user-name"
+  (click)="openSalesUserDashboard(user.id)">
+  {{ user.firstName }} {{ user.lastName }}
+</button>
+
+              </div>
+            </td>
+
+            <td>{{ user.email || '—' }}</td>
+            <td>{{ user.mobile || '—' }}</td>
+
+            <td>
+              <span
+                class="status-badge"
+                [ngClass]="(user.status || 'unknown').toLowerCase()">
+                {{ user.status || 'Unknown' }}
+              </span>
+            </td>
+
+            <td>
+              <span class="role-badge">{{ getRoleName(user) }}</span>
+            </td>
+          </tr>
+
+          <tr *ngIf="filteredSalesUsers.length === 0">
+            <td colspan="6" class="empty-state">
+              <strong>No Sales Users found</strong>
+              <p>Try changing your search or status filter.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </section>
+
+</div>

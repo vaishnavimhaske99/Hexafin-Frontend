@@ -1,0 +1,29 @@
+
+.crm-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background: #f4f7fb;
+}
+
+app-sidebar {
+  display: block;
+  flex: 0 0 250px;
+}
+
+.main-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+app-header {
+  display: block;
+}
+
+.page-content {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+}

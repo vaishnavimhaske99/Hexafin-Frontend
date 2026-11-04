@@ -1,0 +1,67 @@
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <!-- Company Logo -->
+    <div class="brand-logo">
+      <!-- तुमचा लोगो इमेज इथे टाका -->
+      <img src="assets/logo1.jpeg" alt="Company Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+      <span class="fallback-logo" style="display: none;">C</span>
+    </div>
+    <h2>CRM Portal</h2>
+  </div>
+
+  <div class="menu-label">WORKSPACE</div>
+
+  <nav class="sidebar-menu">
+    <a routerLink="/dashboard" routerLinkActive="active" class="menu-item">
+      <span class="menu-icon">📊</span> Dashboard
+    </a>
+    <a routerLink="/my-organization" routerLinkActive="active" class="menu-item">
+      <span class="menu-icon">🏢</span> My Organization
+    </a>
+    <a routerLink="/leads" routerLinkActive="active" class="menu-item">
+      <span class="menu-icon">📋</span> Leads
+    </a>
+    <a routerLink="/sales-users" routerLinkActive="active" class="menu-item">
+      <span class="menu-icon">👥</span> Sales Users
+    </a>
+    <a routerLink="/customers" routerLinkActive="active" class="menu-item">
+    <span class="bi bi-person-check">@</span> Customers
+  </a>
+    <a routerLink="/deals" routerLinkActive="active" class="menu-item">
+      <span class="menu-icon">💼</span> Deals
+    </a>
+    <a routerLink="/campaigns" routerLinkActive="active" class="menu-item">
+      <span class="menu-icon">📢</span> Campaigns
+    </a>
+    <a routerLink="/todays-actions" routerLinkActive="active" class="menu-item">
+      <span class="menu-icon">⚡</span> Today's Actions
+    </a>
+    <a routerLink="/follow-ups" routerLinkActive="active" class="menu-item">
+      <span class="menu-icon">📞</span> Follow-ups
+    </a>
+    <a routerLink="/tasks" routerLinkActive="active" class="menu-item">
+      <span class="menu-icon">✅</span> Tasks
+    </a>
+    <a routerLink="/customers" routerLinkActive="active" class="menu-item">
+      <span class="menu-icon">🤝</span> Customers
+    </a>
+    <a routerLink="/quotations" routerLinkActive="active" class="menu-item">
+      <span class="menu-icon">📄</span> Quotations
+    </a>
+    <a routerLink="/documents" routerLinkActive="active" class="menu-item">
+      <span class="menu-icon">📁</span> Documents
+    </a>
+    <a routerLink="/reports" routerLinkActive="active" class="menu-item">
+      <span class="menu-icon">📈</span> Reports
+    </a>
+    <a routerLink="/settings" routerLinkActive="active" class="menu-item">
+      <span class="menu-icon">⚙️</span> Settings
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button type="button" (click)="logout()" class="logout-btn">
+      <span class="menu-icon">🚪</span> Logout
+    </button>
+  </div>
+</aside>

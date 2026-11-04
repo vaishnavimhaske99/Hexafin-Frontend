@@ -1,0 +1,74 @@
+
+<div class="my-leads-page">
+  <div class="page-heading">
+    <div>
+      <h1>My Leads</h1>
+      <p>All leads assigned to your account</p>
+    </div>
+
+    <span class="lead-count">{{ leads.length }} Leads</span>
+  </div>
+
+  <div *ngIf="loading" class="message">
+    Loading your leads...
+  </div>
+
+  <div *ngIf="!loading && errorMessage" class="message error">
+    <p>{{ errorMessage }}</p>
+    <button type="button" (click)="loadMyLeads()">Retry</button>
+  </div>
+
+  <div
+    *ngIf="!loading && !errorMessage && leads.length === 0"
+    class="message">
+    No leads are assigned to you yet.
+  </div>
+
+  <div
+    class="table-wrapper"
+    *ngIf="!loading && !errorMessage && leads.length > 0">
+
+    <table>
+      <thead>
+        <tr>
+          <th>Lead Name</th>
+          <th>Company</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Product</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let lead of leads">
+          <td>
+            <button
+              class="lead-link"
+              type="button"
+              (click)="openLead(lead.id)">
+              {{ getLeadName(lead) }}
+            </button>
+          </td>
+
+          <td>{{ lead.companyName || '—' }}</td>
+          <td>{{ lead.email || '—' }}</td>
+          <td>{{ lead.phone || '—' }}</td>
+          <td>{{ lead.product || '—' }}</td>
+          <td>
+            <span class="status">{{ lead.status }}</span>
+          </td>
+          <td>
+            <button
+              type="button"
+              class="view-button"
+              (click)="openLead(lead.id)">
+              View Profile
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

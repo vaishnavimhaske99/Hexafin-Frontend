@@ -1,0 +1,204 @@
+<div class="manager-dashboard">
+
+  <!-- Header -->
+  <header class="dashboard-header">
+    <div>
+      <p class="eyebrow">MANAGER WORKSPACE</p>
+      <h1>Welcome, {{ currentUserName }} 👋</h1>
+      <p class="subtitle">Manage your team leads, sales users, and pipeline.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-outline" (click)="refresh()" [disabled]="isLoading">
+        ⟳ Refresh
+      </button>
+    </div>
+  </header>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="state-message">
+    <div class="loader"></div>
+    <p>Loading dashboard...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="!isLoading && errorMessage" class="error-message">
+    <p>{{ errorMessage }}</p>
+    <button class="btn-primary" (click)="refresh()">Retry</button>
+  </div>
+
+  <!-- Main Content -->
+  <ng-container *ngIf="!isLoading && !errorMessage">
+
+    <!-- Stats Cards -->
+    <section class="stats-grid">
+      <div class="stat-card" (click)="openTeamLeads()">
+        <div class="stat-icon blue">👔</div>
+        <div class="stat-content">
+          <span class="stat-label">Team Leads</span>
+          <strong>{{ stats.totalTeamLeads }}</strong>
+          <span class="stat-desc">Under me</span>
+        </div>
+      </div>
+
+      <div class="stat-card" (click)="openTeamLeads()">
+        <div class="stat-icon purple">👥</div>
+        <div class="stat-content">
+          <span class="stat-label">Sales Users</span>
+          <strong>{{ stats.totalSalesUsers }}</strong>
+          <span class="stat-desc">Under team leads</span>
+        </div>
+      </div>
+
+      <div class="stat-card" (click)="openLeads()">
+        <div class="stat-icon green">📋</div>
+        <div class="stat-content">
+          <span class="stat-label">Total Leads</span>
+          <strong>{{ stats.totalLeads }}</strong>
+          <span class="stat-desc">Team pipeline</span>
+        </div>
+      </div>
+
+      <div class="stat-card" (click)="openLeads()">
+        <div class="stat-icon orange">🏆</div>
+        <div class="stat-content">
+          <span class="stat-label">Won Leads</span>
+          <strong>{{ stats.wonLeads }}</strong>
+          <span class="stat-desc">Conversion: {{ stats.conversionRate }}%</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Team Leads Section -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>My Team Leads ({{ teamLeads.length }})</h2>
+          <p>Team leads reporting to you</p>
+        </div>
+        <button class="btn-outline" (click)="openTeamLeads()">View All →</button>
+      </div>
+
+      <div class="team-grid" *ngIf="teamLeads.length > 0">
+        <div class="team-card" 
+             *ngFor="let tl of teamLeads"
+             (click)="openTeamLeadProfile(tl.id)">
+          <div class="avatar">{{ getInitials(tl) }}</div>
+          <div class="member-info">
+            <strong>{{ getFullName(tl) }}</strong>
+            <span class="role-badge">TEAM_LEAD</span>
+            <p class="email">{{ tl.email }}</p>
+            <p class="mobile" *ngIf="tl.mobile">📱 {{ tl.mobile }}</p>
+          </div>
+          <span class="arrow">→</span>
+        </div>
+      </div>
+
+      <div *ngIf="teamLeads.length === 0" class="empty-state">
+        <span class="empty-icon">👔</span>
+        <h3>No Team Leads yet</h3>
+        <p>Ask Admin to add Team Leads under you.</p>
+      </div>
+    </section>
+
+    <!-- Sales Users Section -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Sales Users ({{ salesUsers.length }})</h2>
+          <p>Sales users under your team leads</p>
+        </div>
+      </div>
+
+      <div class="team-grid" *ngIf="salesUsers.length > 0">
+        <div class="team-card" 
+             *ngFor="let su of salesUsers"
+             (click)="openSalesUserProfile(su.id)">
+          <div class="avatar avatar-green">{{ getInitials(su) }}</div>
+          <div class="member-info">
+            <strong>{{ getFullName(su) }}</strong>
+            <span class="role-badge role-sales">SALES</span>
+            <p class="email">{{ su.email }}</p>
+            <p class="mobile" *ngIf="su.mobile">📱 {{ su.mobile }}</p>
+          </div>
+          <span class="arrow">→</span>
+        </div>
+      </div>
+
+      <div *ngIf="salesUsers.length === 0" class="empty-state">
+        <span class="empty-icon">👥</span>
+        <h3>No Sales Users yet</h3>
+        <p>Ask Team Leads to add Sales Users.</p>
+      </div>
+    </section>
+
+    <!-- Recent Leads Section -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Recent Leads ({{ allLeads.length }})</h2>
+          <p>Latest leads across your team</p>
+        </div>
+        <button class="btn-outline" (click)="openLeads()">View All Leads →</button>
+      </div>
+
+      <div class="table-wrapper" *ngIf="recentLeads.length > 0">
+        <table class="leads-table">
+          <thead>
+            <tr>
+              <th>Lead</th>
+              <th>Company</th>
+              <th>Status</th>
+              <th>Assigned To</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let lead of recentLeads" 
+                (click)="openLeadProfile(lead.id)"
+                class="clickable-row">
+              <td>
+                <div class="lead-info">
+                  <span class="lead-avatar">{{ getLeadInitials(lead) }}</span>
+                  <div>
+                    <strong>{{ getLeadName(lead) }}</strong>
+                    <small>{{ lead.email }}</small>
+                  </div>
+                </div>
+              </td>
+              <td>{{ lead.companyName || '—' }}</td>
+              <td>
+                <span class="status-badge" 
+                      [ngClass]="'status-' + getStatusClass(lead.status)">
+                  {{ (lead.status || '').replace('_', ' ') }}
+                </span>
+              </td>
+              <td>{{ lead.assignedToName || 'Unassigned' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="recentLeads.length === 0" class="empty-state">
+        <span class="empty-icon">📋</span>
+        <h3>No leads yet</h3>
+        <p>Your team hasn't received any leads yet.</p>
+      </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section class="quick-actions-grid">
+      <div class="quick-action-card" (click)="openCustomers()">
+        <span class="qa-icon">👥</span>
+        <h3>Customers</h3>
+        <p>View all converted customers</p>
+      </div>
+
+      <div class="quick-action-card" (click)="openTeamLeads()">
+        <span class="qa-icon">🏢</span>
+        <h3>Organization</h3>
+        <p>View team hierarchy</p>
+      </div>
+    </section>
+
+  </ng-container>
+
+</div>

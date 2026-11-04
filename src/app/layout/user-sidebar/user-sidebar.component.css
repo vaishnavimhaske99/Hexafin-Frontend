@@ -1,0 +1,212 @@
+/* ========================================
+   PROFESSIONAL CRM SIDEBAR — DARK THEME
+   ======================================== */
+
+:host {
+  display: block;
+  flex-shrink: 0;
+  width: 250px;
+  min-height: 100%;
+}
+
+.user-sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 250px;
+  min-height: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 24px 16px;
+  background: #111827;
+  color: #e5e7eb;
+  font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ---------- BRAND ---------- */
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 8px 20px;
+}
+
+/* Logo container — clean square with white bg */
+.brand-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.brand-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 5px;
+  display: block;
+}
+
+.brand-text h2 {
+  margin: 0 0 5px;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.brand-text span {
+  color: #9ca3af;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+/* ---------- SECTION LABEL ---------- */
+.sidebar-section-label {
+  margin: 20px 10px 12px;
+  color: #6b7280;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+/* ---------- NAVIGATION ---------- */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ---------- PROFESSIONAL BUTTON ---------- */
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #9ca3af;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.1s ease;
+  overflow: hidden;
+}
+
+/* Hover — soft raised feel */
+.nav-item:hover {
+  background: #1f2937;
+  color: #f3f4f6;
+}
+
+.nav-item:hover .nav-icon {
+  color: #60a5fa;
+}
+
+/* Click feedback */
+.nav-item:active {
+  transform: scale(0.985);
+}
+
+/* Active — blue accent bar + soft gradient bg */
+.nav-item.active {
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.18) 0%, rgba(37, 99, 235, 0.06) 100%);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 55%;
+  background: #3b82f6;
+  border-radius: 0 3px 3px 0;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+}
+
+.nav-item.active .nav-icon {
+  color: #60a5fa;
+}
+
+/* Focus ring — accessibility */
+.nav-item:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* ---------- ICONS ---------- */
+.nav-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: #6b7280;
+  transition: color 0.18s ease;
+}
+
+.nav-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---------- LABEL ---------- */
+.nav-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- BOTTOM SECTION ---------- */
+.sidebar-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+/* Logout — red professional */
+.logout-item {
+  color: #9ca3af;
+}
+
+.logout-item .nav-icon {
+  color: #6b7280;
+}
+
+.logout-item:hover {
+  background: rgba(220, 38, 38, 0.12);
+  color: #fca5a5;
+}
+
+.logout-item:hover .nav-icon {
+  color: #f87171;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 768px) {
+  :host,
+  .user-sidebar {
+    width: 220px;
+  }
+}

@@ -1,0 +1,912 @@
+<div class="profile-page">
+
+  <!-- ==================== LOADING ==================== -->
+  <div class="state-message" *ngIf="loading">
+    <div class="loader"></div>
+    <p>Loading lead profile...</p>
+  </div>
+
+  <!-- ==================== ERROR ==================== -->
+  <div class="error-message" *ngIf="!loading && errorMessage">
+    <h3>Unable to load lead</h3>
+    <p>{{ errorMessage }}</p>
+    <button class="btn btn-primary" (click)="goBack()">Back to Leads</button>
+  </div>
+
+  <!-- ==================== MAIN PROFILE ==================== -->
+  <ng-container *ngIf="!loading && lead">
+
+    <!-- HEADER -->
+    <header class="page-header">
+      <div class="header-left">
+        <button class="back-button" (click)="goBack()">← Back to Leads</button>
+        <h1>{{ fullName }}</h1>
+        <p class="company-name">
+          {{ lead.companyName || 'No Company' }}
+          <span class="lead-id">Lead #{{ lead.id }}</span>
+        </p>
+      </div>
+      <div class="header-right">
+        <!-- Status Dropdown -->
+        <div class="status-dropdown-wrapper">
+          <select
+            class="status-dropdown"
+            [ngClass]="'status-' + (lead.status || '').toLowerCase()"
+            [ngModel]="lead.status"
+            (ngModelChange)="changeStatus($event)"
+            [disabled]="isUpdatingStatus">
+            <option *ngFor="let s of statusOptions" [value]="s">
+              {{ s.replace('_', ' ') }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Convert to Customer Button -->
+        <button
+          *ngIf="(userRole === 'ADMIN' || userRole === 'SALES' || userRole === 'TEAM_LEAD' || userRole === 'MANAGER') && lead.status !== 'WON'"
+          class="btn btn-success convert-btn"
+          (click)="openConvertForm()">
+          ✅ Convert to Customer
+        </button>
+      </div>
+    </header>
+
+    <!-- Status Success Message -->
+    <div class="status-success-msg" *ngIf="statusSuccessMessage">
+      ✅ {{ statusSuccessMessage }}
+    </div>
+
+    <!-- MAIN LAYOUT -->
+    <div class="profile-layout">
+
+      <!-- LEFT SIDEBAR -->
+      <aside class="contact-card">
+        <div class="avatar">
+          {{ (lead.firstName || '?').charAt(0) }}{{ (lead.lastName || '').charAt(0) }}
+        </div>
+        <h2>{{ fullName }}</h2>
+
+        <div class="contact-divider"></div>
+
+        <div class="contact-detail">
+          <span class="detail-icon">✉</span>
+          <div>
+            <small>Email</small>
+            <a [href]="'mailto:' + (lead.email || '')">{{ lead.email || 'N/A' }}</a>
+          </div>
+        </div>
+
+        <div class="contact-detail">
+          <span class="detail-icon">☎</span>
+          <div>
+            <small>Phone</small>
+            <a [href]="'tel:' + (lead.phone || '')">{{ lead.phone || 'N/A' }}</a>
+          </div>
+        </div>
+
+        <div class="contact-detail">
+          <span class="detail-icon">♙</span>
+          <div>
+            <small>Assigned To</small>
+            <strong>{{ lead.assignedToName || 'Unassigned' }}</strong>
+          </div>
+        </div>
+
+        <div class="contact-divider"></div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <button class="quick-action call-action" *ngIf="lead.phone" (click)="makeCall()">
+            <span>☎</span> Call
+          </button>
+          <a class="quick-action whatsapp-action" *ngIf="lead.phone" [href]="whatsappUrl" target="_blank" rel="noopener noreferrer">
+            <span>◉</span> WhatsApp
+          </a>
+          <a class="quick-action email-action" *ngIf="lead.email" [href]="'mailto:' + (lead.email || '')">
+            <span>✉</span> Email
+          </a>
+        </div>
+      </aside>
+
+      <!-- RIGHT CONTENT -->
+      <main class="main-content">
+
+        <!-- TABS -->
+        <nav class="tabs">
+          <button *ngFor="let tab of tabs"
+                  class="tab-button"
+                  [class.active]="activeTab === tab.id"
+                  (click)="setActiveTab(tab.id)">
+            {{ tab.label }}
+          </button>
+        </nav>
+
+        <!-- ==================== 1. OVERVIEW TAB ==================== -->
+        <section class="content-card" *ngIf="activeTab === 'overview'">
+          <div class="section-heading">
+            <h2>Lead Overview</h2>
+          </div>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Loan Product</label>
+              <p>{{ lead.product || '—' }}</p>
+            </div>
+            <div class="info-item">
+              <label>Source</label>
+              <p>{{ lead.source || '—' }}</p>
+            </div>
+            <div class="info-item">
+              <label>City</label>
+              <p>{{ lead.city || '—' }}</p>
+            </div>
+            <div class="info-item">
+              <label>Status</label>
+              <p>{{ (lead.status || '').replace('_', ' ') }}</p>
+            </div>
+          </div>
+          <div class="description-section">
+            <label>Description</label>
+            <p>{{ lead.description || 'No description added.' }}</p>
+          </div>
+        </section>
+
+        <!-- ==================== 2. STATUS HISTORY TAB ==================== -->
+        <section class="content-card" *ngIf="activeTab === 'status-history'">
+          <div class="section-heading">
+            <h2>Status History</h2>
+            <button class="btn btn-outline" (click)="loadStatusHistory()">Refresh</button>
+          </div>
+
+          <div class="state-message" *ngIf="statusHistoryLoading">
+            <div class="loader"></div>
+            <p>Loading status history...</p>
+          </div>
+
+          <div class="error-message" *ngIf="!statusHistoryLoading && statusHistoryError">
+            <p>{{ statusHistoryError }}</p>
+            <button class="btn btn-outline" (click)="loadStatusHistory()">Retry</button>
+          </div>
+
+          <div class="status-timeline" *ngIf="!statusHistoryLoading && !statusHistoryError">
+            <div class="status-history-item" *ngFor="let h of statusHistory">
+              <div class="status-marker"></div>
+              <div class="status-content">
+                <div class="status-change">
+                  <span class="status-badge" [ngClass]="'status-' + (h.oldStatus || '').toLowerCase()">
+                    {{ (h.oldStatus || 'NONE').replace('_', ' ') }}
+                  </span>
+                  <span class="arrow">→</span>
+                  <span class="status-badge" [ngClass]="'status-' + (h.newStatus || '').toLowerCase()">
+                    {{ (h.newStatus || '').replace('_', ' ') }}
+                  </span>
+                </div>
+                <div class="status-meta">
+                  <span>📅 {{ h.changedAt | date:'dd MMM yyyy, hh:mm a' }}</span>
+                  <span *ngIf="h.changedByName" class="status-user">
+                    👤 {{ h.changedByName }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="empty-state" *ngIf="statusHistory.length === 0">
+              <span class="empty-icon">📊</span>
+              <h3>No status changes yet</h3>
+              <p>When the lead's status changes, it will appear here.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== 3. ACTIONS TAB ==================== -->
+        <section class="content-card" *ngIf="activeTab === 'actions'">
+          <div class="section-heading">
+            <h2>Contact Actions</h2>
+            <p>Contact the lead and record activities in your CRM.</p>
+          </div>
+
+          <div class="action-grid">
+            <div class="action-card" (click)="openActionModal('CALL')">
+              <span class="action-icon">📞</span>
+              <strong>Log a Call</strong>
+              <small>Record call details</small>
+            </div>
+            <div class="action-card" (click)="openActionModal('EMAIL')">
+              <span class="action-icon">✉</span>
+              <strong>Log an Email</strong>
+              <small>Record email sent</small>
+            </div>
+            <div class="action-card" (click)="openActionModal('MEETING')">
+              <span class="action-icon">🤝</span>
+              <strong>Log a Meeting</strong>
+              <small>Record meeting notes</small>
+            </div>
+            <div class="action-card" (click)="openFollowUpModal()">
+              <span class="action-icon">📅</span>
+              <strong>Schedule Follow-up</strong>
+              <small>Set a reminder</small>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== 4. NOTES TAB ==================== -->
+        <section class="content-card" *ngIf="activeTab === 'notes'">
+          <div class="section-heading">
+            <div>
+              <h2>Lead Notes</h2>
+              <p>Internal notes about this lead.</p>
+            </div>
+            <span class="note-count">{{ notes.length }} notes</span>
+          </div>
+
+          <div class="add-note-box">
+            <textarea
+              [(ngModel)]="newNoteContent"
+              placeholder="Write a note (e.g. 'Client needs ₹50L at 8.5% interest')..."
+              rows="3"
+              [disabled]="isSavingNote">
+            </textarea>
+            <div class="note-form-footer">
+              <small>Logged in as: {{ userRole }}</small>
+              <button
+                class="btn btn-primary"
+                (click)="saveNote()"
+                [disabled]="!newNoteContent.trim() || isSavingNote">
+                {{ isSavingNote ? 'Saving...' : '+ Add Note' }}
+              </button>
+            </div>
+          </div>
+
+          <div class="state-message" *ngIf="notesLoading">
+            <div class="loader"></div>
+            <p>Loading notes...</p>
+          </div>
+
+          <div class="notes-list" *ngIf="!notesLoading">
+            <div class="empty-state" *ngIf="notes.length === 0">
+              <span class="empty-icon">📝</span>
+              <h3>No notes yet</h3>
+              <p>Add the first note about this lead using the form above.</p>
+            </div>
+
+            <div class="note-card" *ngFor="let note of notes">
+              <ng-container *ngIf="editingNoteId !== note.id">
+                <div class="note-content">{{ note.content }}</div>
+                <div class="note-footer">
+                  <div class="note-meta">
+                    <span>📅 {{ note.createdAt | date:'dd MMM yyyy, hh:mm a' }}</span>
+                    <span class="note-author">👤 {{ note.createdByName || 'Unknown User' }}</span>
+                  </div>
+                  <div class="note-actions">
+                    <button class="btn-icon" (click)="startEditNote(note)" title="Edit">✏</button>
+                    <button class="btn-icon danger" (click)="deleteNote(note.id)" title="Delete">🗑</button>
+                  </div>
+                </div>
+              </ng-container>
+
+              <ng-container *ngIf="editingNoteId === note.id">
+                <textarea [(ngModel)]="editingNoteContent" rows="3" class="edit-textarea"></textarea>
+                <div class="edit-actions">
+                  <button class="btn btn-outline" (click)="cancelEditNote()">Cancel</button>
+                  <button class="btn btn-primary" (click)="updateNote()">Save Changes</button>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== 5. ACTIVITY HISTORY TAB ==================== -->
+        <section class="content-card" *ngIf="activeTab === 'history'">
+          <div class="section-heading">
+            <h2>Activity History</h2>
+            <button class="btn btn-outline" (click)="loadActivities()">Refresh</button>
+          </div>
+
+          <div class="state-message" *ngIf="activitiesLoading">
+            <div class="loader"></div>
+            <p>Loading activities...</p>
+          </div>
+
+          <div class="error-message" *ngIf="!activitiesLoading && activitiesError">
+            <p>{{ activitiesError }}</p>
+            <button class="btn btn-outline" (click)="loadActivities()">Retry</button>
+          </div>
+
+          <div class="timeline" *ngIf="!activitiesLoading && !activitiesError">
+            <div class="timeline-item" *ngFor="let act of activities">
+              <span class="timeline-dot"></span>
+              <div class="activity-body">
+                <div class="activity-header">
+                  <strong class="activity-type">
+                    <span *ngIf="act.type === 'CALL'">📞</span>
+                    <span *ngIf="act.type === 'EMAIL'">✉️</span>
+                    <span *ngIf="act.type === 'WHATSAPP'">💬</span>
+                    <span *ngIf="act.type === 'MEETING'">🤝</span>
+                    <span *ngIf="act.type === 'TEXT'">📱</span>
+                    <span *ngIf="act.type === 'OTHER'">📝</span>
+                    {{ (act.type || '').replace('_', ' ') }}
+                  </strong>
+                  <small class="activity-time">
+                    {{ act.activityDateTime | date:'dd MMM yyyy, hh:mm a' }}
+                  </small>
+                </div>
+                <p class="activity-desc">{{ act.description || 'No description' }}</p>
+                <small class="activity-author">
+                  👤 {{ act.createdByName || 'Unknown User' }}
+                </small>
+              </div>
+            </div>
+
+            <div class="empty-state" *ngIf="activities.length === 0">
+              <span class="empty-icon">📋</span>
+              <h3>No activity recorded yet</h3>
+              <p>Log a call, email, or meeting to see it here.</p>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </ng-container>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- 1. Action Modal -->
+  <div class="modal-backdrop" *ngIf="showActionModal" (click)="showActionModal = false">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>
+          <ng-container [ngSwitch]="actionType">
+            <span *ngSwitchCase="'CALL'">📞 Log a Call</span>
+            <span *ngSwitchCase="'EMAIL'">✉️ Log an Email</span>
+            <span *ngSwitchCase="'MEETING'">🤝 Log a Meeting</span>
+            <span *ngSwitchDefault>Log Activity</span>
+          </ng-container>
+        </h2>
+        <button class="btn-close" (click)="showActionModal = false">✕</button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">What happened?</label>
+        <textarea
+          [(ngModel)]="actionDescription"
+          placeholder="E.g. 'Client wants 8.5% interest, will share salary slip tomorrow'"
+          rows="4"
+          class="form-control">
+        </textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" (click)="showActionModal = false">Cancel</button>
+        <button
+          class="btn btn-primary"
+          (click)="saveActivity()"
+          [disabled]="!actionDescription.trim()">
+          Save Activity
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Call Modal -->
+  <div class="modal-backdrop" *ngIf="showCallModal" (click)="closeCallModal()">
+    <div class="modal-box call-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>📞 Call in Progress</h2>
+        <button class="btn-close" (click)="closeCallModal()">✕</button>
+      </div>
+
+      <div class="call-info">
+        <div class="call-target">
+          <strong>{{ fullName }}</strong>
+          <span class="call-phone">{{ lead?.phone }}</span>
+        </div>
+        <div class="call-timer">
+          <span class="timer-icon">⏱</span>
+          <span class="timer-value">{{ formattedCallDuration }}</span>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <label class="form-label">Call Notes (type while calling)</label>
+        <textarea
+          [(ngModel)]="callNotes"
+          placeholder="E.g. 'Client wants 8.5% interest rate'"
+          rows="3"
+          class="form-control">
+        </textarea>
+
+        <label class="form-label" style="margin-top: 16px;">Call Outcome *</label>
+        <div class="outcome-grid">
+          <label class="outcome-option" [class.selected]="callOutcome === 'INTERESTED'">
+            <input type="radio" name="outcome" [(ngModel)]="callOutcome" value="INTERESTED">
+            <span>✅ Interested</span>
+          </label>
+          <label class="outcome-option" [class.selected]="callOutcome === 'NOT_INTERESTED'">
+            <input type="radio" name="outcome" [(ngModel)]="callOutcome" value="NOT_INTERESTED">
+            <span>❌ Not Interested</span>
+          </label>
+          <label class="outcome-option" [class.selected]="callOutcome === 'CALLBACK'">
+            <input type="radio" name="outcome" [(ngModel)]="callOutcome" value="CALLBACK">
+            <span>🔄 Callback</span>
+          </label>
+          <label class="outcome-option" [class.selected]="callOutcome === 'WRONG_NUMBER'">
+            <input type="radio" name="outcome" [(ngModel)]="callOutcome" value="WRONG_NUMBER">
+            <span>📵 Wrong Number</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-outline" (click)="closeCallModal()">Cancel</button>
+        <button
+          class="btn btn-primary"
+          (click)="saveCallLog()"
+          [disabled]="!callOutcome || isLoggingCall">
+          {{ isLoggingCall ? 'Saving...' : 'Save Call Log' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Follow-up Modal -->
+  <div class="modal-backdrop" *ngIf="showFollowUpModal" (click)="showFollowUpModal = false">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>📅 Schedule Follow-up</h2>
+        <button class="btn-close" (click)="showFollowUpModal = false">✕</button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">Follow-up Date & Time</label>
+        <input type="datetime-local" [(ngModel)]="followUpDate" class="form-control" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" (click)="showFollowUpModal = false">Cancel</button>
+        <button class="btn btn-primary" (click)="saveFollowUp()">Save Follow-up</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== CUSTOMER CONVERSION FORM MODAL ==================== -->
+  <!-- ==================== CUSTOMER CONVERSION FORM MODAL ==================== -->
+<div class="modal-backdrop" *ngIf="showCustomerForm" (click)="closeConvertForm()">
+  <div class="modal-box customer-form-modal" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="modal-header customer-modal-header">
+      <div class="modal-title-group">
+        <div class="modal-icon">🎯</div>
+        <div>
+          <h2>Convert to Customer</h2>
+          <p>Fill in all the details to complete the conversion.</p>
+        </div>
+      </div>
+      <button class="btn-close" (click)="closeConvertForm()">✕</button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body customer-form-body">
+
+      <!-- ═══════════ 1. PERSONAL INFORMATION ═══════════ -->
+      <div class="form-section">
+        <div class="form-section-header">
+          <span class="section-icon">👤</span>
+          <h3>Personal Information</h3>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>First Name <span class="required">*</span></label>
+            <input type="text" [(ngModel)]="customerForm.firstName" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Last Name</label>
+            <input type="text" [(ngModel)]="customerForm.lastName" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Email <span class="required">*</span></label>
+            <input type="email" [(ngModel)]="customerForm.email" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Phone <span class="required">*</span></label>
+            <input type="tel" [(ngModel)]="customerForm.phone" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Alternate Phone</label>
+            <input type="tel" [(ngModel)]="customerForm.alternatePhone" class="form-control" />
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ 2. KYC DETAILS ═══════════ -->
+      <div class="form-section">
+        <div class="form-section-header">
+          <span class="section-icon">🪪</span>
+          <h3>KYC Details</h3>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Date of Birth</label>
+            <input type="date" [(ngModel)]="customerForm.dateOfBirth" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Gender</label>
+            <select [(ngModel)]="customerForm.gender" class="form-control">
+              <option value="">Select Gender</option>
+              <option *ngFor="let g of genders" [value]="g">{{ g }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Marital Status</label>
+            <select [(ngModel)]="customerForm.maritalStatus" class="form-control">
+              <option value="">Select Status</option>
+              <option *ngFor="let m of maritalStatuses" [value]="m">{{ m }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>PAN Number</label>
+            <input type="text" [(ngModel)]="customerForm.panNumber" maxlength="10" class="form-control" placeholder="ABCDE1234F" />
+          </div>
+          <div class="form-group">
+            <label>Aadhaar Number</label>
+            <input type="text" [(ngModel)]="customerForm.aadhaarNumber" maxlength="12" class="form-control" placeholder="12 digits" />
+          </div>
+          <div class="form-group">
+            <label>Photo URL</label>
+            <input type="text" [(ngModel)]="customerForm.photoUrl" class="form-control" placeholder="https://..." />
+          </div>
+          <div class="form-group span-2">
+            <label>Permanent Address</label>
+            <textarea [(ngModel)]="customerForm.permanentAddress" rows="2" class="form-control"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ 3. CURRENT ADDRESS ═══════════ -->
+      <div class="form-section">
+        <div class="form-section-header">
+          <span class="section-icon">📍</span>
+          <h3>Current Address</h3>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Address Line 1</label>
+            <input type="text" [(ngModel)]="customerForm.addressLine1" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Address Line 2</label>
+            <input type="text" [(ngModel)]="customerForm.addressLine2" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>City</label>
+            <input type="text" [(ngModel)]="customerForm.city" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>State</label>
+            <input type="text" [(ngModel)]="customerForm.state" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Country</label>
+            <input type="text" [(ngModel)]="customerForm.country" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Pincode</label>
+            <input type="text" [(ngModel)]="customerForm.pincode" maxlength="6" class="form-control" />
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ 4. EMPLOYMENT ═══════════ -->
+      <div class="form-section">
+        <div class="form-section-header">
+          <span class="section-icon">💼</span>
+          <h3>Employment</h3>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Employment Type</label>
+            <select [(ngModel)]="customerForm.employmentType" class="form-control">
+              <option value="">Select Type</option>
+              <option *ngFor="let t of employmentTypes" [value]="t">{{ t }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Company Name</label>
+            <input type="text" [(ngModel)]="customerForm.companyName" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Designation</label>
+            <input type="text" [(ngModel)]="customerForm.designation" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Experience (Years)</label>
+            <input type="number" [(ngModel)]="customerForm.experienceYears" min="0" class="form-control" />
+          </div>
+          <div class="form-group span-2">
+            <label class="checkbox-inline">
+              <input type="checkbox" [(ngModel)]="customerForm.itrFiled" />
+              ITR Filed?
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ 5. LOAN DETAILS ═══════════ -->
+      <div class="form-section">
+        <div class="form-section-header">
+          <span class="section-icon">💰</span>
+          <h3>Current Loan Requirement</h3>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Loan Type <span class="required">*</span></label>
+            <select [(ngModel)]="customerForm.loanType" class="form-control">
+              <option value="">Select Loan Type</option>
+              <option value="HOME_LOAN">🏠 Home Loan</option>
+              <option value="PERSONAL_LOAN">👤 Personal Loan</option>
+              <option value="BUSINESS_LOAN">💼 Business Loan</option>
+              <option value="LOAN_AGAINST_PROPERTY">🏢 Loan Against Property</option>
+              <option value="CAR_LOAN">🚗 Car Loan</option>
+              <option value="LOAN_AGAINST_SECURITIES">📈 Loan Against Securities</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Loan Purpose</label>
+            <input type="text" [(ngModel)]="customerForm.loanPurpose" class="form-control" placeholder="E.g. Home Purchase" />
+          </div>
+          <div class="form-group">
+            <label>Loan Amount (₹) <span class="required">*</span></label>
+            <input type="number" [(ngModel)]="customerForm.loanAmount" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Tenure (Months) <span class="required">*</span></label>
+            <input type="number" [(ngModel)]="customerForm.tenureMonths" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Interest Rate (%)</label>
+            <input type="number" [(ngModel)]="customerForm.interestRate" step="0.01" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Expected EMI (₹)</label>
+            <input type="number" [(ngModel)]="customerForm.expectedEmi" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Down Payment (₹)</label>
+            <input type="number" [(ngModel)]="customerForm.downPayment" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Urgency</label>
+            <select [(ngModel)]="customerForm.urgency" class="form-control">
+              <option *ngFor="let u of urgencies" [value]="u">{{ u }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ 6. FINANCIAL DETAILS ═══════════ -->
+      <div class="form-section">
+        <div class="form-section-header">
+          <span class="section-icon">📊</span>
+          <h3>Financial Details</h3>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Monthly Salary (₹)</label>
+            <input type="number" [(ngModel)]="customerForm.monthlyIncome" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Other Income (₹)</label>
+            <input type="number" [(ngModel)]="customerForm.otherIncome" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Property Value (₹)</label>
+            <input type="number" [(ngModel)]="customerForm.propertyValue" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Existing EMI (₹)</label>
+            <input type="number" [(ngModel)]="customerForm.existingEmi" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>CIBIL Score (300-900)</label>
+            <input type="number" [(ngModel)]="customerForm.cibilScore" min="300" max="900" class="form-control" />
+          </div>
+        </div>
+
+        <!-- Annual income preview -->
+        <div class="income-preview-inline">
+          <span>Estimated Annual Income:</span>
+          <strong>₹{{ formTotalAnnualIncome | number:'1.0-0' }}</strong>
+        </div>
+      </div>
+
+      <!-- ═══════════ 7. PREVIOUS LOAN ═══════════ -->
+      <div class="form-section">
+        <div class="form-section-header">
+          <span class="section-icon">📜</span>
+          <h3>Previous Loan History</h3>
+        </div>
+        <div class="form-grid">
+          <div class="form-group span-2">
+            <label class="checkbox-inline">
+              <input type="checkbox" [(ngModel)]="customerForm.previousLoanTaken" />
+              Has taken a previous loan?
+            </label>
+          </div>
+        </div>
+
+        <div class="form-grid" *ngIf="customerForm.previousLoanTaken">
+          <div class="form-group">
+            <label>Previous Loan Type</label>
+            <input type="text" [(ngModel)]="customerForm.previousLoanType" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Lender / Bank</label>
+            <input type="text" [(ngModel)]="customerForm.previousLoanLender" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Loan Amount (₹)</label>
+            <input type="number" [(ngModel)]="customerForm.previousLoanAmount" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>EMI Amount (₹)</label>
+            <input type="number" [(ngModel)]="customerForm.previousLoanEmi" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Tenure (Months)</label>
+            <input type="number" [(ngModel)]="customerForm.previousLoanTenure" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select [(ngModel)]="customerForm.previousLoanStatus" class="form-control">
+              <option value="">Select Status</option>
+              <option *ngFor="let s of previousLoanStatuses" [value]="s">{{ s }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Repayment History</label>
+            <select [(ngModel)]="customerForm.previousRepaymentHistory" class="form-control">
+              <option value="">Select History</option>
+              <option *ngFor="let r of repaymentHistories" [value]="r">{{ r }}</option>
+            </select>
+          </div>
+          <div class="form-group span-2">
+            <label>Reason for Loan</label>
+            <textarea [(ngModel)]="customerForm.previousLoanReason" rows="2" class="form-control"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ 8. DOCUMENTS ═══════════ -->
+      <div class="form-section">
+        <div class="form-section-header">
+          <span class="section-icon">📎</span>
+          <h3>Documents Checklist</h3>
+        </div>
+        <div class="doc-checkbox-grid">
+          <label class="doc-checkbox"><input type="checkbox" [(ngModel)]="customerForm.docPanCard" /> PAN Card</label>
+          <label class="doc-checkbox"><input type="checkbox" [(ngModel)]="customerForm.docAadhaarCard" /> Aadhaar Card</label>
+          <label class="doc-checkbox"><input type="checkbox" [(ngModel)]="customerForm.docSalarySlips" /> Salary Slips (3M)</label>
+          <label class="doc-checkbox"><input type="checkbox" [(ngModel)]="customerForm.docBankStatement" /> Bank Statement (6M)</label>
+          <label class="doc-checkbox"><input type="checkbox" [(ngModel)]="customerForm.docItr" /> ITR (2Y)</label>
+          <label class="doc-checkbox"><input type="checkbox" [(ngModel)]="customerForm.docPropertyPapers" /> Property Papers</label>
+          <label class="doc-checkbox"><input type="checkbox" [(ngModel)]="customerForm.docPhoto" /> Photo</label>
+        </div>
+      </div>
+
+      <!-- ═══════════ 9. BANK DETAILS ═══════════ -->
+      <div class="form-section">
+        <div class="form-section-header">
+          <span class="section-icon">🏦</span>
+          <h3>Bank Details</h3>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Bank Name</label>
+            <select [(ngModel)]="customerForm.bankName" class="form-control">
+              <option value="">Select Bank</option>
+              <option value="HDFC">HDFC Bank</option>
+              <option value="SBI">State Bank of India</option>
+              <option value="ICICI">ICICI Bank</option>
+              <option value="AXIS">Axis Bank</option>
+              <option value="KOTAK">Kotak Mahindra</option>
+              <option value="PNB">Punjab National Bank</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Account Number</label>
+            <input type="text" [(ngModel)]="customerForm.accountNumber" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Loan Status</label>
+            <select [(ngModel)]="customerForm.loanStatus" class="form-control">
+              <option *ngFor="let s of loanStatuses" [value]="s">{{ s }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ 10. CONSULTATION ═══════════ -->
+      <div class="form-section">
+        <div class="form-section-header">
+          <span class="section-icon">📞</span>
+          <h3>Consultation & Follow-up</h3>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Lead Source</label>
+            <select [(ngModel)]="customerForm.leadSource" class="form-control">
+              <option value="">Select Source</option>
+              <option *ngFor="let s of leadSources" [value]="s">{{ s }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Next Follow-up</label>
+            <input type="date" [(ngModel)]="customerForm.nextFollowUp" class="form-control" />
+          </div>
+          <div class="form-group span-2">
+            <label>Notes</label>
+            <textarea [(ngModel)]="customerForm.notes" rows="3" class="form-control" placeholder="Any additional notes..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- EMI Preview -->
+      <div class="emi-preview" *ngIf="calculatedEmi > 0">
+        <h3>💡 Estimated EMI</h3>
+        <div class="emi-box">
+          <div class="emi-row">
+            <span>Monthly EMI:</span>
+            <strong>₹{{ calculatedEmi | number:'1.0-0' }}</strong>
+          </div>
+          <div class="emi-row">
+            <span>Total Interest:</span>
+            <strong>₹{{ totalInterest | number:'1.0-0' }}</strong>
+          </div>
+          <div class="emi-row highlight">
+            <span>Total Payment:</span>
+            <strong>₹{{ totalPayment | number:'1.0-0' }}</strong>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer customer-form-footer">
+      <button class="btn btn-outline" (click)="closeConvertForm()">Cancel</button>
+      <button
+        class="btn btn-success convert-submit-btn"
+        (click)="saveCustomer()"
+        [disabled]="isConverting">
+        {{ isConverting ? '⏳ Converting...' : '✅ Convert to Customer' }}
+      </button>
+    </div>
+
+  </div>
+</div>
+
+  <!-- ==================== SUCCESS POPUP ==================== -->
+  <div class="modal-backdrop success-backdrop" *ngIf="showSuccessPopup" (click)="closeSuccessPopup()">
+    <div class="success-modal" (click)="$event.stopPropagation()">
+      <div class="success-icon-wrapper">
+        <div class="success-icon">✅</div>
+      </div>
+      <h2>Conversion Successful!</h2>
+      <p class="success-message">
+        <strong>{{ convertedCustomerName }}</strong> has been successfully converted to a Customer.
+      </p>
+      <div class="success-details">
+        <div class="success-detail-item">
+          <span>Customer ID:</span>
+          <strong>#{{ convertedCustomerId }}</strong>
+        </div>
+        <div class="success-detail-item">
+          <span>Loan Type:</span>
+          <strong>{{ convertedCustomerLoanType }}</strong>
+        </div>
+      </div>
+      <div class="success-actions">
+        <button class="btn btn-outline" (click)="closeSuccessPopup()">Close</button>
+        <button class="btn btn-primary" (click)="goToCustomersList()">View Customers →</button>
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,230 @@
+<div class="profile-page">
+
+  <!-- ✅ BACK BUTTON -->
+  <div class="top-back-bar">
+    <button type="button" class="btn-back" (click)="goBack()">
+      <span class="back-arrow">←</span> Back to Dashboard
+    </button>
+  </div>
+
+  <!-- BREADCRUMB -->
+  <nav class="breadcrumb">
+    <span>Team</span>
+    <span class="breadcrumb-separator">/</span>
+    <strong>{{ fullName }}</strong>
+  </nav>
+
+  <!-- LOADING -->
+  <div *ngIf="loading" class="empty-state">
+    <div class="loader"></div>
+    <p>Loading profile...</p>
+  </div>
+
+  <!-- ERROR -->
+  <div *ngIf="!loading && errorMessage" class="empty-state">
+    <p>{{ errorMessage }}</p>
+    <button class="btn btn-secondary" (click)="goBack()">← Back</button>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <ng-container *ngIf="!loading && !errorMessage && profile.id">
+
+    <!-- PROFILE HEADER -->
+    <section class="profile-header">
+      
+      <!-- Left: Avatar + Name -->
+      <div class="profile-identity">
+        <div class="avatar">{{ initials }}</div>
+        <div class="identity-details">
+          <div class="name-line">
+            <h1>{{ fullName }}</h1>
+            <span class="status-badge" [ngClass]="'status-' + (profile.status || '').toLowerCase()">
+              <span class="status-dot"></span>
+              {{ profile.status }}
+            </span>
+          </div>
+          <p class="profile-subtitle">
+            <span class="role-badge" [ngClass]="'role-' + (profile.role || '').toLowerCase()">
+              {{ profile.role }}
+            </span>
+            <span class="meta-divider">·</span>
+            ID: #{{ profile.id }}
+            <ng-container *ngIf="profile.reportsToName">
+              <span class="meta-divider">·</span>
+              Reports to: <strong>{{ profile.reportsToName }}</strong>
+            </ng-container>
+          </p>
+          <div class="identity-meta">
+            <span *ngIf="profile.email">📧 {{ profile.email }}</span>
+            <span *ngIf="profile.mobile">📱 {{ profile.mobile }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Quick Actions -->
+      <div class="header-actions">
+        <a *ngIf="profile.mobile" [href]="'tel:' + profile.mobile" class="btn-action">
+          📞 Call
+        </a>
+        <a *ngIf="profile.email" [href]="'mailto:' + profile.email" class="btn-action">
+          ✉ Email
+        </a>
+      </div>
+
+    </section>
+
+    <!-- STATS GRID -->
+    <section class="stats-grid">
+      <div class="stat-card" *ngFor="let stat of stats">
+        <div class="stat-top">
+          <span class="stat-label">{{ stat.label }}</span>
+          <span class="stat-icon">{{ stat.icon }}</span>
+        </div>
+        <div class="stat-value">{{ stat.value }}</div>
+        <div class="stat-note">{{ stat.note }}</div>
+      </div>
+    </section>
+
+    <!-- TABS -->
+    <div class="profile-tabs">
+      <button type="button"
+              [class.active]="activeTab === 'overview'"
+              (click)="setTab('overview')">
+        📋 Overview
+      </button>
+      <button type="button"
+              [class.active]="activeTab === 'leads'"
+              (click)="setTab('leads')">
+        📊 Leads
+        <span class="tab-count">{{ leads.length }}</span>
+      </button>
+    </div>
+
+    <!-- ===================== OVERVIEW TAB ===================== -->
+    <section class="panel" *ngIf="activeTab === 'overview'">
+      <div class="panel-heading">
+        <div>
+          <h2>Profile Information</h2>
+          <p>Basic details of {{ fullName }}</p>
+        </div>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">First Name</span>
+          <strong class="info-value">{{ profile.firstName || '—' }}</strong>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Last Name</span>
+          <strong class="info-value">{{ profile.lastName || '—' }}</strong>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Email</span>
+          <strong class="info-value">{{ profile.email || '—' }}</strong>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Mobile</span>
+          <strong class="info-value">{{ profile.mobile || '—' }}</strong>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Role</span>
+          <strong class="info-value">
+            <span class="role-badge" [ngClass]="'role-' + (profile.role || '').toLowerCase()">
+              {{ profile.role }}
+            </span>
+          </strong>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Status</span>
+          <strong class="info-value">{{ profile.status || '—' }}</strong>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Reports To</span>
+          <strong class="info-value">{{ profile.reportsToName || 'None (Top Level)' }}</strong>
+        </div>
+        <div class="info-item">
+          <span class="info-label">User ID</span>
+          <strong class="info-value">#{{ profile.id }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== LEADS TAB ===================== -->
+    <section class="panel" *ngIf="activeTab === 'leads'">
+      <div class="panel-heading">
+        <div>
+          <h2>Assigned Leads ({{ leads.length }})</h2>
+          <p>All leads assigned to {{ fullName }}</p>
+        </div>
+        <span class="section-total">{{ leads.length }} Total</span>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="leadsLoading" class="empty-state">
+        <div class="loader"></div>
+        <p>Loading leads...</p>
+      </div>
+
+      <!-- Error -->
+      <div *ngIf="!leadsLoading && leadsErrorMessage" class="empty-state">
+        <p>{{ leadsErrorMessage }}</p>
+        <button class="btn btn-secondary" (click)="loadAssignedLeads()">Retry</button>
+      </div>
+
+      <!-- Empty -->
+      <div *ngIf="!leadsLoading && !leadsErrorMessage && leads.length === 0" class="empty-state">
+        <span class="empty-icon">📭</span>
+        <h3>No leads yet</h3>
+        <p>This user has no assigned leads.</p>
+      </div>
+
+      <!-- Table -->
+      <div *ngIf="!leadsLoading && !leadsErrorMessage && leads.length > 0" class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>LEAD</th>
+              <th>COMPANY</th>
+              <th>STATUS</th>
+              <th *ngIf="profile.role === 'TEAM_LEAD'">ASSIGN TO</th>
+              <th>UPDATED</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let lead of leads">
+              <td>
+                <button class="lead-link" type="button" (click)="openLead(lead.id)">
+                  {{ lead.name }}
+                </button>
+              </td>
+              <td>{{ lead.company }}</td>
+              <td>
+                <span class="lead-status" [ngClass]="'status-' + lead.statusClass">
+                  {{ lead.status }}
+                </span>
+              </td>
+              <td *ngIf="profile.role === 'TEAM_LEAD'">
+                <select class="assign-dropdown" 
+                        [value]="lead.assignedToId || ''"
+                        (change)="onAssignLead(lead.id, $event)">
+                  <option value="">-- Select --</option>
+                  <option *ngFor="let su of salesUsers" [value]="su.id">
+                    {{ su.firstName }} {{ su.lastName }}
+                  </option>
+                </select>
+              </td>
+              <td>{{ lead.updated }}</td>
+              <td>
+                <button class="btn btn-secondary btn-small" (click)="openLead(lead.id)">
+                  View →
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </ng-container>
+</div>

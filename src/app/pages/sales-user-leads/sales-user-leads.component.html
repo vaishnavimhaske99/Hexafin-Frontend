@@ -1,0 +1,35 @@
+
+<h2>Sales User Assigned Leads</h2>
+
+<p *ngIf="loading">Loading leads...</p>
+<p *ngIf="errorMessage">{{ errorMessage }}</p>
+
+<table *ngIf="!loading && leads.length > 0">
+  <thead>
+    <tr>
+      <th>Lead ID</th>
+      <th>Name</th>
+      <th>Company</th>
+      <th>Email</th>
+      <th>Phone</th>
+      <th>Status</th>
+      <th>Assigned To</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr *ngFor="let lead of leads">
+      <td>{{ lead.id }}</td>
+      <td>{{ lead.firstName }} {{ lead.lastName }}</td>
+      <td>{{ lead.companyName }}</td>
+      <td>{{ lead.email }}</td>
+      <td>{{ lead.phone }}</td>
+      <td>{{ lead.status }}</td>
+      <td>{{ lead.assignedToName || 'Unassigned' }}</td>
+    </tr>
+  </tbody>
+</table>
+
+<p *ngIf="!loading && !errorMessage && leads.length === 0">
+  Ya Sales User la ajun leads assign zalele nahit.
+</p>

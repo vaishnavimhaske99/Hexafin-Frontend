@@ -1,0 +1,65 @@
+<aside class="team-sidebar">
+  
+  <!-- Brand -->
+  <div class="sidebar-brand">
+    <div class="brand-logo">T</div>
+    <h2>Team Workspace</h2>
+  </div>
+
+  <!-- Menu -->
+  <nav class="sidebar-menu">
+    
+    <!-- ✅ Dashboard -->
+    <a routerLink="/team-lead-dashboard" 
+       routerLinkActive="active" 
+       [routerLinkActiveOptions]="{ exact: false }"
+       class="menu-item">
+      <span class="menu-icon">📊</span> Dashboard
+    </a>
+
+    <!-- ✅ My Team (Team Leads page) -->
+    <a routerLink="/team-lead-dashboard" 
+       routerLinkActive="active" 
+       [routerLinkActiveOptions]="{ exact: true }"
+       class="menu-item">
+      <span class="menu-icon">👥</span> My Team
+    </a>
+
+    <!-- ✅ Leads (Team Lead चे सगळे लीड्स) -->
+    <a routerLink="/leads" 
+       routerLinkActive="active" 
+       class="menu-item">
+      <span class="menu-icon">📋</span> Leads
+    </a>
+
+    <!-- ✅ Customers -->
+    <a routerLink="/customers" 
+       routerLinkActive="active" 
+       class="menu-item">
+      <span class="menu-icon">👤</span> Customers
+    </a>
+
+    <!-- ✅ My Organization -->
+    <a routerLink="/my-organization" 
+       routerLinkActive="active" 
+       class="menu-item">
+      <span class="menu-icon">🏢</span> My Organization
+    </a>
+
+    <!-- ✅ My Profile -->
+    <a routerLink="/user-profile" 
+       routerLinkActive="active" 
+       class="menu-item">
+      <span class="menu-icon">👤</span> My Profile
+    </a>
+
+  </nav>
+
+  <!-- Footer -->
+  <div class="sidebar-footer">
+    <button type="button" (click)="logout()" class="logout-btn">
+      <span class="menu-icon">🚪</span> Logout
+    </button>
+  </div>
+
+</aside>

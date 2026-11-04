@@ -1,0 +1,35 @@
+<header class="crm-header">
+  
+  <!-- LEFT SIDE: Logo & Brand Name -->
+  <div class="header-left">
+    <div class="brand-logo">
+      <img src="assets/logo1.jpeg" alt="Hexafin Logo" />
+    </div>
+    <div class="brand-name">
+      <h1>HEXAFIN</h1>
+      <span>CRM Workspace</span>
+    </div>
+  </div>
+
+  <!-- RIGHT SIDE: Notifications & Profile -->
+  <div class="header-right">
+    
+    <!-- Notification Bell -->
+    <button class="icon-btn notification-btn" title="Notifications">
+      <i class="bi bi-bell"></i> <!-- किंवा 🔔 इमोजी -->
+      <span class="notification-dot"></span>
+    </button>
+
+    <!-- Profile Dropdown -->
+    <div class="profile-section">
+      <div class="profile-info">
+        <span class="profile-name">{{ userName }}</span>
+        <span class="profile-role">{{ userRole }}</span>
+      </div>
+      <div class="profile-avatar">
+        {{ initials }}
+      </div>
+    </div>
+
+  </div>
+</header>

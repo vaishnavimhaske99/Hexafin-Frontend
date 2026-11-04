@@ -1,0 +1,192 @@
+<div class="dashboard-container">
+
+  <!-- Header -->
+  <header class="dashboard-header">
+    <div class="header-content">
+      <h1>Admin Dashboard</h1>
+      <p>Welcome back! Here is your CRM overview.</p>
+    </div>
+    <div class="dashboard-actions">
+      <button class="btn-primary" (click)="openMyOrganization()">
+        <span>🏢</span> My Organization
+      </button>
+    </div>
+  </header>
+
+  <!-- Loading/Error -->
+  <div class="loading-message" *ngIf="isLoading">
+    <div class="spinner"></div> Loading data...
+  </div>
+  <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <!-- Stats Cards (Modern & Dynamic) -->
+  <section class="stats-grid">
+    <div class="stat-card" (click)="openLeads('ALL')">
+      <div class="card-icon blue">📋</div>
+      <div class="card-content">
+        <span class="card-title">Total Leads</span>
+        <strong>{{ stats.totalLeads }}</strong>
+      </div>
+      <span class="card-arrow">→</span>
+    </div>
+
+    <div class="stat-card" (click)="openLeads('NEW')">
+      <div class="card-icon green">✨</div>
+      <div class="card-content">
+        <span class="card-title">New Leads</span>
+        <strong>{{ stats.newLeads }}</strong>
+      </div>
+      <span class="card-arrow">→</span>
+    </div>
+
+    <div class="stat-card" (click)="openLeads('WON')">
+      <div class="card-icon purple">🏆</div>
+      <div class="card-content">
+        <span class="card-title">Won Leads</span>
+        <strong>{{ stats.wonLeads }}</strong>
+      </div>
+      <span class="card-arrow">→</span>
+    </div>
+  </section>
+
+  <!-- Organization Overview -->
+  <section class="org-overview-section">
+    <div class="section-header">
+      <div>
+        <h2>Organization Overview</h2>
+        <p class="section-subtitle">Manage your team hierarchy and roles.</p>
+      </div>
+      <button class="btn-outline" (click)="openMyOrganization()">View Hierarchy →</button>
+    </div>
+
+    <div class="org-stats-grid">
+      <div class="org-stat-card" (click)="openRoleUsers('ADMIN')">
+        <div class="org-icon bg-blue">👑</div>
+        <div class="org-details">
+          <span class="org-label">Admins</span>
+          <strong class="org-count">{{ userStats.admin }}</strong>
+        </div>
+      </div>
+      <div class="org-stat-card" (click)="openRoleUsers('MANAGER')">
+        <div class="org-icon bg-purple">📊</div>
+        <div class="org-details">
+          <span class="org-label">Managers</span>
+          <strong class="org-count">{{ userStats.manager }}</strong>
+        </div>
+      </div>
+      <div class="org-stat-card" (click)="openRoleUsers('TEAM_LEAD')">
+        <div class="org-icon bg-orange">🎯</div>
+        <div class="org-details">
+          <span class="org-label">Team Leads</span>
+          <strong class="org-count">{{ userStats.teamLead }}</strong>
+        </div>
+      </div>
+      <div class="org-stat-card" (click)="openRoleUsers('SALES')">
+        <div class="org-icon bg-green">📞</div>
+        <div class="org-details">
+          <span class="org-label">Sales</span>
+          <strong class="org-count">{{ userStats.sales }}</strong>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Loan Products -->
+  <section class="loan-products-section">
+    <div class="section-header">
+      <div>
+        <h2>Loan Product Overview</h2>
+        <p class="section-subtitle">Leads distributed by loan products.</p>
+      </div>
+    </div>
+    <div class="loan-products-grid">
+      <div class="loan-product-card" *ngFor="let product of loanProducts">
+        <div class="loan-product-icon">{{ product.icon }}</div>
+        <div class="loan-product-info">
+          <h3>{{ product.label }}</h3>
+          <p class="product-count"><strong>{{ productLeadCounts[product.value] }}</strong> Leads</p>
+        </div>
+        <div class="product-actions">
+          <button class="btn-icon" (click)="openProductLeads(product.value)" title="View Leads">👁️</button>
+          <button class="btn-icon primary" (click)="addProductLead(product.value)" title="Add Lead">+</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sales Users Table (Existing) -->
+  <section class="sales-section" *ngIf="showSalesUsers">
+    <div class="section-header">
+      <h2>Sales Users</h2>
+      <button class="btn-outline" (click)="closeSalesUsers()">✕ Close</button>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th><th>Name</th><th>Email</th><th>Mobile</th><th>Status</th><th>Role</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of salesUsers">
+            <td>#{{ user.id }}</td>
+            <td>
+              <button class="user-link" (click)="openUserProfile(user.id)">
+                {{ user.firstName }} {{ user.lastName }}
+              </button>
+            </td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.mobile }}</td>
+            <td><span class="status-badge" [ngClass]="user.status.toLowerCase()">{{ user.status }}</span></td>
+            <td>{{ user.role }}</td>
+          </tr>
+          <tr *ngIf="salesUsers.length === 0 && !isLoading">
+            <td colspan="6" class="empty-state">No Sales Users found.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Role Users Modal -->
+  <div *ngIf="showRoleUsersModal" class="modal-backdrop" (click)="closeRoleUsersModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ selectedRoleFilter }} Users</h2>
+        <button class="btn-icon close-btn" (click)="closeRoleUsersModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <table class="modal-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Reports To</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let u of filteredRoleUsers">
+              <td>#{{ u.id }}</td>
+              <td>
+                <button class="user-link" (click)="openUserProfile(u.id)">
+                  {{ u.firstName }} {{ u.lastName }}
+                </button>
+              </td>
+              <td>{{ u.email }}</td>
+              <td>
+                <span class="badge" [ngClass]="u.reportsToId ? 'bg-success' : 'bg-secondary'">
+                  {{ u.reportsToId ? 'Yes' : 'No' }}
+                </span>
+              </td>
+            </tr>
+            <tr *ngIf="filteredRoleUsers.length === 0">
+              <td colspan="4" class="empty-state">No users found for this role.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>

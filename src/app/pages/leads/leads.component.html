@@ -1,0 +1,131 @@
+<!-- LEAD ACTION BUTTONS -->
+<div class="lead-actions">
+  <button type="button" class="add-lead-btn" (click)="openAddLead()">+ Add Lead</button>
+  <button type="button" class="bulk-upload-btn" (click)="openBulkUpload()">Bulk Upload Excel</button>
+  
+  <!-- ✅ नवीन: Assign Mode टॉगल बटण -->
+  <button 
+    type="button" 
+    class="assign-mode-btn" 
+    [class.active]="isSelectionMode"
+    (click)="toggleSelectionMode()">
+    {{ isSelectionMode ? '✕ Cancel Selection' : '☑ Assign Leads' }}
+  </button>
+</div>
+
+<!-- API LOADING & MESSAGES -->
+<div *ngIf="isLoading" class="loading-message">Loading leads...</div>
+<div *ngIf="errorMessage && !isLoading" class="error-message">
+  {{ errorMessage }} <button type="button" (click)="loadLeads()">Retry</button>
+</div>
+<div *ngIf="assignSuccessMessage" class="assign-success">{{ assignSuccessMessage }}</div>
+<div *ngIf="assignErrorMessage" class="error-message">{{ assignErrorMessage }}</div>
+
+<!-- SEARCH TOOLBAR -->
+<section class="lead-filters">
+  <div class="search-toolbar">
+    <div class="global-search">
+      <span class="search-icon">⌕</span>
+      <input type="search" [(ngModel)]="searchText" placeholder="Search name, phone, email..." />
+      <button *ngIf="searchText" type="button" class="clear-search" (click)="searchText = ''">×</button>
+    </div>
+    <button type="button" class="filter-toggle-btn" (click)="showFilters = !showFilters">
+      <span class="filter-icon">☷</span> Filters <span class="filter-chevron">{{ showFilters ? '▲' : '▼' }}</span>
+    </button>
+  </div>
+  <div class="filter-results-count">
+    Showing <strong>{{ filteredLeads.length }}</strong> of {{ totalLeads }} leads
+  </div>
+</section>
+
+<!-- ========================================== -->
+<!-- ✅ BULK ACTION BAR (फक्त सिलेक्शन मोडमध्ये) -->
+<!-- ========================================== -->
+<ng-container *ngIf="isSelectionMode">
+  <div class="bulk-action-bar" *ngIf="selectedLeadIds.size > 0">
+    <div class="bulk-info">
+      <span class="selected-count">{{ selectedLeadIds.size }}</span> leads selected
+      <button class="clear-selection" (click)="clearSelection()">✕ Clear</button>
+    </div>
+    
+    <div class="bulk-actions">
+      <select [(ngModel)]="bulkAssignUserId" class="bulk-select">
+        <option [ngValue]="null">Select User to Assign...</option>
+        
+        <!-- 🔥 ADMIN ला MANAGER आणि TEAM_LEAD दिसतील -->
+        <ng-container *ngIf="userRole === 'ADMIN'">
+          <ng-container *ngFor="let user of allUsers">
+            <option *ngIf="user.role === 'MANAGER' || user.role === 'TEAM_LEAD'" [ngValue]="user.id">
+              {{ user.firstName }} {{ user.lastName }} ({{ user.role }})
+            </option>
+          </ng-container>
+        </ng-container>
+
+        <!-- 🔥 TEAM_LEAD ला फक्त SALES दिसतील -->
+        <ng-container *ngIf="userRole === 'TEAM_LEAD'">
+          <ng-container *ngFor="let user of allUsers">
+            <option *ngIf="user.role === 'SALES'" [ngValue]="user.id">
+              {{ user.firstName }} {{ user.lastName }} (Sales)
+            </option>
+          </ng-container>
+        </ng-container>
+      </select>
+      
+      <button class="assign-selected-btn" 
+              [disabled]="!bulkAssignUserId || isBulkAssigning"
+              (click)="bulkAssign()">
+        {{ isBulkAssigning ? 'Assigning...' : 'Assign Selected' }}
+      </button>
+    </div>
+  </div>
+</ng-container>
+
+<!-- FULL DATABASE LEADS TABLE -->
+<div class="table-container">
+  <div class="table-heading">
+    <h3>All Leads - Database Records</h3>
+  </div>
+
+  <table class="leads-table">
+    <thead>
+      <tr>
+        <!-- ✅ चेकबॉक्स फक्त सिलेक्शन मोडमध्ये दिसेल -->
+        <th class="checkbox-col" *ngIf="isSelectionMode">
+          <input type="checkbox" [checked]="isAllSelected()" (change)="toggleAll($event)">
+        </th>
+        <th>ID</th>
+        <th>Lead Name</th>
+        <th>Company</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Loan Product</th>
+        <th>Status</th>
+        <th>Assigned To</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let lead of filteredLeads" class="clickable-row" (click)="openLeadProfile(lead.id)">
+        
+        <!-- ✅ Row Checkbox फक्त सिलेक्शन मोडमध्ये दिसेल -->
+        <td class="checkbox-col" *ngIf="isSelectionMode" (click)="$event.stopPropagation()">
+          <input type="checkbox" [checked]="selectedLeadIds.has(lead.id)" (change)="toggleSelection(lead.id)">
+        </td>
+
+        <td>#{{ lead.id }}</td>
+        <td><strong>{{ lead.firstName }} {{ lead.lastName }}</strong></td>
+        <td>{{ lead.companyName || '-' }}</td>
+        <td>{{ lead.email || '-' }}</td>
+        <td>{{ lead.phone || '-' }}</td>
+        <td>{{ lead.product ? lead.product.replaceAll('_', ' ') : '-' }}</td>
+        <td><span [class]="'status-badge ' + (lead.status || '').toLowerCase()">{{ lead.status || '-' }}</span></td>
+        <td>
+          <span *ngIf="lead.assignedToName" class="assigned-badge">👤 {{ lead.assignedToName }}</span>
+          <span *ngIf="!lead.assignedToName" class="unassigned-badge">Unassigned</span>
+        </td>
+      </tr>
+      <tr *ngIf="!isLoading && !errorMessage && filteredLeads.length === 0">
+        <td [attr.colspan]="isSelectionMode ? 9 : 8" class="empty-message">No leads found.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,78 @@
+
+<div class="bulk-upload-container">
+
+  <div class="page-header">
+    <h2>Bulk Upload Leads</h2>
+
+    <button
+      type="button"
+      class="back-btn"
+      (click)="backToLeads()">
+      ← Back to All Leads
+    </button>
+  </div>
+
+  <div class="upload-card">
+
+    <h3>Upload Excel File</h3>
+    <p>Select an Excel file to import multiple leads.</p>
+
+    <input
+      type="file"
+      accept=".xlsx"
+      (change)="onFileSelected($event)"
+    />
+
+    <p *ngIf="selectedFile">
+      Selected File:
+      <strong>{{ selectedFile.name }}</strong>
+    </p>
+
+    <button
+      type="button"
+      class="upload-btn"
+      [disabled]="!selectedFile || isUploading"
+      (click)="uploadExcel()">
+
+      {{ isUploading ? 'Uploading...' : 'Upload Leads' }}
+
+    </button>
+
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="uploadResult" class="result-card">
+
+    <h3>Import Result</h3>
+
+    <div class="result-grid">
+      <p>Total Rows: <strong>{{ uploadResult.totalRows }}</strong></p>
+      <p>Successful: <strong>{{ uploadResult.successCount }}</strong></p>
+      <p>Failed: <strong>{{ uploadResult.failedCount }}</strong></p>
+      <p>Skipped: <strong>{{ uploadResult.skippedCount }}</strong></p>
+    </div>
+
+    <div *ngIf="uploadResult.errors.length > 0">
+      <h4>Import Errors</h4>
+
+      <ul>
+        <li *ngFor="let error of uploadResult.errors">
+          {{ error }}
+        </li>
+      </ul>
+    </div>
+
+    <button
+      *ngIf="uploadResult.successCount > 0"
+      type="button"
+      class="back-btn"
+      (click)="backToLeads()">
+      View All Leads
+    </button>
+
+  </div>
+
+</div>

@@ -1,0 +1,465 @@
+
+<div class="sales-dashboard">
+
+  <!-- DASHBOARD HEADER -->
+  <div class="dashboard-heading">
+    <div>
+      <p class="eyebrow">
+        {{ isAdminViewingSalesUser ? 'ADMIN WORKSPACE' : 'SALES WORKSPACE' }}
+      </p>
+
+      <h1>
+         {{ isAdminViewingSalesUser
+    ? 'Selected Sales User Dashboard'
+    : (currentSalesUserName
+        ? currentSalesUserName + "'s Dashboard"
+        : 'My Dashboard') }}
+      </h1>
+
+      <p class="page-subtitle">
+        {{ isAdminViewingSalesUser
+          ? 'View this Sales User’s assigned leads and performance.'
+          : 'Track your leads, monitor progress and focus on your next opportunity.' }}
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <button
+        *ngIf="isAdminViewingSalesUser"
+        type="button"
+        class="refresh-button"
+        (click)="backToSalesUsers()">
+        ← Back to Sales Users
+      </button>
+
+      <button
+        type="button"
+        class="refresh-button"
+        (click)="loadDashboard()"
+        [disabled]="loading">
+        <span class="refresh-icon">↻</span>
+        {{ loading ? 'Refreshing...' : 'Refresh' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div *ngIf="loading" class="state-panel">
+    <div class="loader"></div>
+    <p>Loading assigned leads...</p>
+  </div>
+
+  <!-- ERROR -->
+  <div *ngIf="!loading && errorMessage" class="error-panel">
+    <strong>Unable to load dashboard</strong>
+    <p>{{ errorMessage }}</p>
+
+    <button
+      type="button"
+      class="primary-button"
+      (click)="loadDashboard()">
+      Try Again
+    </button>
+  </div>
+
+  <!-- DASHBOARD CONTENT -->
+  <ng-container *ngIf="!loading && !errorMessage">
+
+    <!-- WELCOME BANNER -->
+    <section class="welcome-banner">
+      <div class="welcome-content">
+        <span class="welcome-tag">
+          {{ isAdminViewingSalesUser
+            ? 'SALES USER OVERVIEW'
+            : 'YOUR PERFORMANCE' }}
+        </span>
+
+        <h2>
+          {{ isAdminViewingSalesUser
+            ? 'Assigned Leads Overview'
+            : 'Every lead is an opportunity.' }}
+        </h2>
+
+        <p>
+          {{ isAdminViewingSalesUser
+            ? 'Review this Sales User’s assigned leads, lead status and conversion performance.'
+            : 'Keep your pipeline moving. Follow up on time and turn opportunities into successful deals.' }}
+        </p>
+      </div>
+
+      <div class="welcome-illustration" aria-hidden="true">
+        <span class="illustration-circle circle-one"></span>
+        <span class="illustration-circle circle-two"></span>
+        <span class="illustration-symbol">↗</span>
+      </div>
+    </section>
+
+    <!-- STATISTICS CARDS -->
+    <section class="stats-grid" aria-label="Lead statistics">
+
+      <button
+        type="button"
+        class="stat-card"
+        *ngFor="let stat of stats"
+        [class.selected]="selectedFilter === stat.filter"
+        [ngClass]="'stat-' + stat.color"
+        (click)="onStatClick(stat.filter)"
+        [attr.aria-pressed]="selectedFilter === stat.filter">
+
+        <div class="stat-top">
+          <span class="stat-icon">
+            <ng-container [ngSwitch]="stat.icon">
+              <span *ngSwitchCase="'users'">♧</span>
+              <span *ngSwitchCase="'user-plus'">＋</span>
+              <span *ngSwitchCase="'trending-up'">↗</span>
+              <span *ngSwitchCase="'trophy'">★</span>
+              <span *ngSwitchCase="'circle-x'">×</span>
+            </ng-container>
+          </span>
+
+          <span class="card-arrow">↗</span>
+        </div>
+
+        <span class="stat-value">{{ stat.value }}</span>
+        <span class="stat-title">{{ stat.title }}</span>
+        <span class="stat-description">{{ stat.description }}</span>
+
+      </button>
+
+    </section>
+
+    <!-- OVERVIEW -->
+    <section class="overview-grid">
+
+      <!-- LEAD PIPELINE -->
+      <div class="panel leads-panel">
+
+        <div class="panel-heading">
+          <div>
+            <h2>Lead Pipeline</h2>
+            <p>Click a category above to filter the assigned leads.</p>
+          </div>
+
+          <span class="result-count">
+            {{ filteredLeads.length }} leads
+          </span>
+        </div>
+
+        <!-- FILTER TABS -->
+        <div class="filter-tabs" aria-label="Lead filters">
+
+          <button
+            type="button"
+            [class.active]="selectedFilter === 'ALL'"
+            (click)="selectFilter('ALL')">
+            All
+          </button>
+
+          <button
+            type="button"
+            [class.active]="selectedFilter === 'NEW'"
+            (click)="selectFilter('NEW')">
+            New
+          </button>
+
+          <button
+            type="button"
+            [class.active]="selectedFilter === 'ACTIVE'"
+            (click)="selectFilter('ACTIVE')">
+            Active
+          </button>
+
+          <button
+            type="button"
+            [class.active]="selectedFilter === 'WON'"
+            (click)="selectFilter('WON')">
+            Won
+          </button>
+
+          <button
+            type="button"
+            [class.active]="selectedFilter === 'LOST'"
+            (click)="selectFilter('LOST')">
+            Lost
+          </button>
+
+        </div>
+
+        <!-- LEADS TABLE -->
+        <div class="table-wrapper">
+          <table class="leads-table">
+
+            <thead>
+              <tr>
+                <th>LEAD</th>
+                <th>PRODUCT</th>
+                <th>STATUS</th>
+                <th>CREATED</th>
+                <th>ACTION</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              <tr *ngFor="let lead of filteredLeads">
+
+                <!-- CLICKABLE LEAD NAME -->
+                <td>
+                  <button
+                    type="button"
+                    class="lead-identity"
+                    (click)="openLead(lead.id)">
+
+                    <span class="avatar">
+                      {{ getInitials(lead) }}
+                    </span>
+
+                    <span class="lead-text">
+                      <strong>{{ getFullName(lead) }}</strong>
+                      <small>
+                        {{ lead.companyName || lead.email || 'No company' }}
+                      </small>
+                    </span>
+
+                  </button>
+                </td>
+
+                <!-- PRODUCT -->
+                <td class="product-cell">
+                  {{
+                    lead.product
+                      ? (productLabels[lead.product] || lead.product)
+                      : '—'
+                  }}
+                </td>
+
+                <!-- STATUS -->
+                <td>
+                  <span
+                    class="status-badge"
+                    [ngClass]="'status-' + getStatusClass(lead.status)">
+                    {{ getStatusLabel(lead.status) }}
+                  </span>
+                </td>
+
+                <!-- CREATED DATE -->
+                <td class="date-cell">
+                  {{ formatDate(lead.createdAt) }}
+                </td>
+
+                <!-- VIEW PROFILE -->
+                <td>
+                  <button
+                    type="button"
+                    class="view-button"
+                    (click)="openLead(lead.id)"
+                    [attr.aria-label]="'View profile of ' + getFullName(lead)">
+                    →
+                  </button>
+                </td>
+
+              </tr>
+
+              <!-- EMPTY TABLE -->
+              <tr *ngIf="filteredLeads.length === 0">
+                <td colspan="5">
+                  <div class="empty-state">
+                    <span class="empty-icon">⌕</span>
+
+                    <strong>
+                      No {{ selectedFilterTitle.toLowerCase() }} found
+                    </strong>
+
+                    <p>
+                      There are no assigned leads in this category right now.
+                    </p>
+
+                    <button
+                      type="button"
+                      (click)="selectFilter('ALL')">
+                      View all leads
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- PRODUCT OVERVIEW -->
+      <aside class="panel product-panel">
+
+        <div class="panel-heading">
+          <div>
+            <h2>Product Overview</h2>
+            <p>Leads by loan product</p>
+          </div>
+
+          <span class="product-heading-icon">▦</span>
+        </div>
+
+        <!-- CLICKABLE TOTAL ASSIGNED LEADS -->
+        <button
+          type="button"
+          class="product-total clickable-total"
+          (click)="openMyLeads()">
+
+          <strong>{{ leads.length }}</strong>
+          <span>Total assigned leads</span>
+          <small>View all assigned leads →</small>
+
+        </button>
+
+        <div
+          *ngIf="productSummaries.length === 0"
+          class="product-empty">
+          No product data available yet.
+        </div>
+
+        <div
+          class="product-row"
+          *ngFor="let product of productSummaries">
+
+          <div class="product-row-heading">
+            <span>{{ product.name }}</span>
+            <strong>{{ product.count }}</strong>
+          </div>
+
+          <div
+            class="progress-track"
+            role="progressbar"
+            [attr.aria-valuenow]="product.percentage"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            [attr.aria-label]="product.name + ' leads'">
+
+            <div
+              class="progress-fill"
+              [style.width.%]="product.percentage">
+            </div>
+
+          </div>
+
+          <small>
+            {{ product.percentage }}% of assigned leads
+          </small>
+
+        </div>
+
+        <!-- CONVERSION -->
+        <div class="conversion-card">
+          <div class="conversion-icon">↗</div>
+
+          <div>
+            <span>Lead conversion</span>
+            <strong>{{ conversionRate }}%</strong>
+          </div>
+
+          <small>Won / Total leads</small>
+        </div>
+
+      </aside>
+
+    </section>
+
+    <div class="header-actions">
+  <button *ngIf="isTeamLeadOrAdmin()" 
+          class="btn-outline" 
+          (click)="viewFullProfile()">
+    👤 View Full Profile
+  </button>
+  
+  <button *ngIf="isAdminViewingSalesUser" 
+          class="refresh-button" 
+          (click)="backToSalesUsers()">
+    ← Back
+  </button>
+  
+  <button class="refresh-button" 
+          (click)="loadDashboard()" 
+          [disabled]="loading">
+    ⟳ Refresh
+  </button>
+</div>
+
+    <!-- RECENT LEADS -->
+    <section class="panel recent-panel">
+
+      <div class="panel-heading">
+        <div>
+          <h2>Recently Created Leads</h2>
+          <p>Your five most recently created assigned leads</p>
+        </div>
+
+        <button
+          type="button"
+          class="text-button"
+          (click)="openMyLeads()">
+          View all leads →
+        </button>
+      </div>
+
+      <div
+        class="recent-list"
+        *ngIf="recentLeads.length > 0">
+
+        <button
+          type="button"
+          class="recent-row"
+          *ngFor="let lead of recentLeads"
+          (click)="openLead(lead.id)">
+
+          <span class="avatar">
+            {{ getInitials(lead) }}
+          </span>
+
+          <span class="recent-lead-info">
+            <strong>{{ getFullName(lead) }}</strong>
+
+            <small>
+              {{ lead.companyName || lead.email || 'No company details' }}
+            </small>
+          </span>
+
+          <span
+            class="status-badge"
+            [ngClass]="'status-' + getStatusClass(lead.status)">
+            {{ getStatusLabel(lead.status) }}
+          </span>
+
+          <span class="recent-date">
+            {{ formatDate(lead.createdAt) }}
+          </span>
+
+          <span class="recent-arrow">→</span>
+
+        </button>
+
+      </div>
+
+      <div
+        class="empty-state"
+        *ngIf="recentLeads.length === 0">
+
+        <strong>No leads assigned yet</strong>
+        <p>Assigned leads will appear here.</p>
+
+      </div>
+
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="dashboard-footer">
+      <span>CRM Sales Workspace</span>
+
+      <span>
+        Statistics are based on the leads returned by the API.
+      </span>
+    </footer>
+
+  </ng-container>
+
+</div>

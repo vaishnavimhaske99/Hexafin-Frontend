@@ -1,0 +1,288 @@
+<div class="customers-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1>Customers</h1>
+      <p>{{ userRole === 'SALES' ? 'My converted customers' : 'All converted customers' }}</p>
+    </div>
+    <div class="header-stats">
+      <span class="stat-pill">
+        <strong>{{ customers.length }}</strong> Total Customers
+      </span>
+    </div>
+  </div>
+
+  <!-- Search / Filter -->
+  <div class="filter-bar" *ngIf="!loading && !errorMessage">
+    <input type="text" class="search-input"
+           placeholder="🔍 Search name, email, phone..."
+           [(ngModel)]="searchTerm" />
+    <select class="status-select" [(ngModel)]="statusFilter">
+      <option value="">All Status</option>
+      <option value="PENDING">Pending</option>
+      <option value="APPROVED">Approved</option>
+      <option value="REJECTED">Rejected</option>
+      <option value="DISBURSED">Disbursed</option>
+    </select>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="state-message">
+    <div class="loader"></div>
+    <p>Loading customers...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="!loading && errorMessage" class="error-message">
+    <p>{{ errorMessage }}</p>
+    <button class="btn btn-primary" (click)="loadCustomers()">Retry</button>
+  </div>
+
+  <!-- Table -->
+  <div class="customers-table-wrapper" *ngIf="!loading && !errorMessage">
+    <table class="customers-table">
+      <thead>
+        <tr>
+          <th style="width: 32px;"></th>
+          <th>Customer</th>
+          <th>Contact</th>
+          <th>Loan Type</th>
+          <th>Amount</th>
+          <th>CIBIL</th>
+          <th>Monthly Income</th>
+          <th>Bank</th>
+          <th *ngIf="userRole !== 'SALES'">Sales User</th>
+          <th>Urgency</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- ═══════════ MAIN ROW ═══════════ -->
+        <ng-container *ngFor="let c of filteredCustomers">
+
+          <tr class="clickable-row" (click)="openCustomerProfile(c.id)">
+
+            <!-- 🆕 Expand button -->
+            <td (click)="toggleExpand(c.id, $event)">
+              <button class="expand-btn" [class.expanded]="isExpanded(c.id)"
+                      (click)="toggleExpand(c.id, $event)">
+                {{ isExpanded(c.id) ? '▾' : '▸' }}
+              </button>
+            </td>
+
+            <td>
+              <div class="customer-name">
+                <div class="avatar-sm">
+                  {{ c.firstName?.charAt(0) }}{{ c.lastName?.charAt(0) }}
+                </div>
+                <div>
+                  <strong>{{ c.firstName }} {{ c.lastName }}</strong>
+                  <small>{{ c.email || '—' }}</small>
+                </div>
+              </div>
+            </td>
+
+            <td>{{ c.phone || '—' }}</td>
+            <td><span class="loan-type-badge">{{ formatLoanType(c.loanType) }}</span></td>
+            <td>
+              <strong *ngIf="c.loanAmount; else noAmount">₹{{ c.loanAmount | number:'1.0-0' }}</strong>
+              <ng-template #noAmount>—</ng-template>
+            </td>
+            <td>
+              <span class="cibil-badge" [ngClass]="cibilClass(c.cibilScore)">
+                {{ c.cibilScore || '—' }}
+              </span>
+            </td>
+            <td>
+              <span *ngIf="c.monthlyIncome; else noIncome">₹{{ c.monthlyIncome | number:'1.0-0' }}</span>
+              <ng-template #noIncome>—</ng-template>
+            </td>
+            <td>{{ c.bankName || '—' }}</td>
+            <td *ngIf="userRole !== 'SALES'">{{ c.createdByName || '—' }}</td>
+            <td>
+              <span class="urgency-badge" [ngClass]="urgencyClass(c.urgency)" *ngIf="c.urgency">
+                {{ c.urgency }}
+              </span>
+              <span *ngIf="!c.urgency">—</span>
+            </td>
+            <td>
+              <span class="status-pill"
+                    [ngClass]="'status-' + (c.loanStatus || 'pending').toLowerCase()">
+                {{ c.loanStatus || 'PENDING' }}
+              </span>
+            </td>
+            <td>{{ formatDate(c.createdAt) }}</td>
+            <td>
+              <button class="btn-icon"
+                      (click)="$event.stopPropagation(); openCustomerProfile(c.id)">
+                →
+              </button>
+            </td>
+          </tr>
+
+          <!-- ═══════════ EXPANDED ROW — ALL FIELDS ═══════════ -->
+          <tr *ngIf="isExpanded(c.id)" class="expanded-row">
+            <td [attr.colspan]="userRole !== 'SALES' ? 13 : 12">
+
+              <div class="expanded-content">
+
+                <!-- ── Personal & KYC ── -->
+                <div class="expanded-section">
+                  <h4>👤 Personal & KYC</h4>
+                  <div class="expanded-grid">
+                    <div class="expanded-item"><label>First Name</label><span>{{ c.firstName || '—' }}</span></div>
+                    <div class="expanded-item"><label>Last Name</label><span>{{ c.lastName || '—' }}</span></div>
+                    <div class="expanded-item"><label>Email</label><span>{{ c.email || '—' }}</span></div>
+                    <div class="expanded-item"><label>Phone</label><span>{{ c.phone || '—' }}</span></div>
+                    <div class="expanded-item"><label>Alternate Phone</label><span>{{ c.alternatePhone || '—' }}</span></div>
+                    <div class="expanded-item"><label>Date of Birth</label><span>{{ formatDate(c.dateOfBirth) }}</span></div>
+                    <div class="expanded-item"><label>Gender</label><span>{{ formatEnum(c.gender) }}</span></div>
+                    <div class="expanded-item"><label>Marital Status</label><span>{{ formatEnum(c.maritalStatus) }}</span></div>
+                    <div class="expanded-item"><label>PAN Number</label><span>{{ c.panNumber || '—' }}</span></div>
+                    <div class="expanded-item"><label>Aadhaar Number</label><span>{{ c.aadhaarNumber || '—' }}</span></div>
+                    <div class="expanded-item"><label>Photo URL</label><span>{{ c.photoUrl || '—' }}</span></div>
+                    <div class="expanded-item"><label>Permanent Address</label><span>{{ c.permanentAddress || '—' }}</span></div>
+                  </div>
+                </div>
+
+                <!-- ── Address ── -->
+                <div class="expanded-section">
+                  <h4>📍 Address</h4>
+                  <div class="expanded-grid">
+                    <div class="expanded-item"><label>Address Line 1</label><span>{{ c.addressLine1 || '—' }}</span></div>
+                    <div class="expanded-item"><label>Address Line 2</label><span>{{ c.addressLine2 || '—' }}</span></div>
+                    <div class="expanded-item"><label>City</label><span>{{ c.city || '—' }}</span></div>
+                    <div class="expanded-item"><label>State</label><span>{{ c.state || '—' }}</span></div>
+                    <div class="expanded-item"><label>Country</label><span>{{ c.country || '—' }}</span></div>
+                    <div class="expanded-item"><label>Pincode</label><span>{{ c.pincode || '—' }}</span></div>
+                  </div>
+                </div>
+
+                <!-- ── Employment ── -->
+                <div class="expanded-section">
+                  <h4>💼 Employment</h4>
+                  <div class="expanded-grid">
+                    <div class="expanded-item"><label>Employment Type</label><span>{{ formatEnum(c.employmentType) }}</span></div>
+                    <div class="expanded-item"><label>Company Name</label><span>{{ c.companyName || '—' }}</span></div>
+                    <div class="expanded-item"><label>Designation</label><span>{{ c.designation || '—' }}</span></div>
+                    <div class="expanded-item"><label>Experience</label><span>{{ c.experienceYears || '—' }} yrs</span></div>
+                    <div class="expanded-item"><label>ITR Filed</label><span>{{ c.itrFiled ? 'Yes' : 'No' }}</span></div>
+                  </div>
+                </div>
+
+                <!-- ── Current Loan ── -->
+                <div class="expanded-section">
+                  <h4>🎯 Current Loan</h4>
+                  <div class="expanded-grid">
+                    <div class="expanded-item"><label>Loan Type</label><span>{{ formatLoanType(c.loanType) }}</span></div>
+                    <div class="expanded-item"><label>Purpose</label><span>{{ c.loanPurpose || '—' }}</span></div>
+                    <div class="expanded-item"><label>Loan Amount</label><span>₹{{ c.loanAmount | number:'1.0-0' }}</span></div>
+                    <div class="expanded-item"><label>Tenure</label><span>{{ c.tenureMonths || '—' }} months</span></div>
+                    <div class="expanded-item"><label>Interest Rate</label><span>{{ c.interestRate || '—' }}%</span></div>
+                    <div class="expanded-item"><label>Expected EMI</label><span>₹{{ c.expectedEmi | number:'1.0-0' }}</span></div>
+                    <div class="expanded-item"><label>Down Payment</label><span>₹{{ c.downPayment | number:'1.0-0' }}</span></div>
+                    <div class="expanded-item"><label>Urgency</label><span>{{ formatEnum(c.urgency) }}</span></div>
+                    <div class="expanded-item"><label>Loan Status</label><span>{{ c.loanStatus || 'PENDING' }}</span></div>
+                  </div>
+                </div>
+
+                <!-- ── Financial ── -->
+                <div class="expanded-section">
+                  <h4>💰 Financial</h4>
+                  <div class="expanded-grid">
+                    <div class="expanded-item"><label>Monthly Income</label><span>₹{{ c.monthlyIncome | number:'1.0-0' }}</span></div>
+                    <div class="expanded-item"><label>Other Income</label><span>₹{{ c.otherIncome | number:'1.0-0' }}</span></div>
+                    <div class="expanded-item"><label>Annual Income</label><span><strong>₹{{ c.annualIncome | number:'1.0-0' }}</strong></span></div>
+                    <div class="expanded-item"><label>Property Value</label><span>₹{{ c.propertyValue | number:'1.0-0' }}</span></div>
+                    <div class="expanded-item"><label>Existing EMI</label><span>₹{{ c.existingEmi | number:'1.0-0' }}</span></div>
+                    <div class="expanded-item"><label>CIBIL Score</label><span [ngClass]="cibilClass(c.cibilScore)">{{ c.cibilScore || '—' }}</span></div>
+                  </div>
+                </div>
+
+                <!-- ── Previous Loan ── -->
+                <div class="expanded-section">
+                  <h4>📜 Previous Loan</h4>
+                  <div class="expanded-grid">
+                    <div class="expanded-item"><label>Loan Taken?</label><span>{{ c.previousLoanTaken ? 'Yes' : 'No' }}</span></div>
+                    <div class="expanded-item"><label>Loan Type</label><span>{{ formatEnum(c.previousLoanType) }}</span></div>
+                    <div class="expanded-item"><label>Lender</label><span>{{ c.previousLoanLender || '—' }}</span></div>
+                    <div class="expanded-item"><label>Amount</label><span>₹{{ c.previousLoanAmount | number:'1.0-0' }}</span></div>
+                    <div class="expanded-item"><label>EMI</label><span>₹{{ c.previousLoanEmi | number:'1.0-0' }}</span></div>
+                    <div class="expanded-item"><label>Tenure</label><span>{{ c.previousLoanTenure || '—' }} months</span></div>
+                    <div class="expanded-item"><label>Status</label><span>{{ formatEnum(c.previousLoanStatus) }}</span></div>
+                    <div class="expanded-item"><label>Repayment</label><span>{{ formatEnum(c.previousRepaymentHistory) }}</span></div>
+                    <div class="expanded-item span-2"><label>Reason</label><span>{{ c.previousLoanReason || '—' }}</span></div>
+                  </div>
+                </div>
+
+                <!-- ── Documents ── -->
+                <div class="expanded-section">
+                  <h4>📎 Documents</h4>
+                  <div class="expanded-docs">
+                    <span [class.done]="c.docPanCard">PAN {{ c.docPanCard ? '✓' : '✗' }}</span>
+                    <span [class.done]="c.docAadhaarCard">Aadhaar {{ c.docAadhaarCard ? '✓' : '✗' }}</span>
+                    <span [class.done]="c.docSalarySlips">Salary Slips {{ c.docSalarySlips ? '✓' : '✗' }}</span>
+                    <span [class.done]="c.docBankStatement">Bank Stmt {{ c.docBankStatement ? '✓' : '✗' }}</span>
+                    <span [class.done]="c.docItr">ITR {{ c.docItr ? '✓' : '✗' }}</span>
+                    <span [class.done]="c.docPropertyPapers">Property {{ c.docPropertyPapers ? '✓' : '✗' }}</span>
+                    <span [class.done]="c.docPhoto">Photo {{ c.docPhoto ? '✓' : '✗' }}</span>
+                  </div>
+                </div>
+
+                <!-- ── Bank & Consultation ── -->
+                <div class="expanded-section">
+                  <h4>🏦 Bank & Consultation</h4>
+                  <div class="expanded-grid">
+                    <div class="expanded-item"><label>Bank Name</label><span>{{ c.bankName || '—' }}</span></div>
+                    <div class="expanded-item"><label>Account Number</label><span>{{ c.accountNumber || '—' }}</span></div>
+                    <div class="expanded-item"><label>Lead Source</label><span>{{ formatEnum(c.leadSource) }}</span></div>
+                    <div class="expanded-item"><label>Next Follow-up</label><span>{{ formatDate(c.nextFollowUp) }}</span></div>
+                    <div class="expanded-item span-2"><label>Notes</label><span>{{ c.notes || '—' }}</span></div>
+                  </div>
+                </div>
+
+                <!-- ── System Info ── -->
+                <div class="expanded-section">
+                  <h4>⚙️ System Information</h4>
+                  <div class="expanded-grid">
+                    <div class="expanded-item"><label>Customer ID</label><span>#{{ c.id }}</span></div>
+                    <div class="expanded-item"><label>Source Lead ID</label><span>{{ c.sourceLeadId || '—' }}</span></div>
+                    <div class="expanded-item"><label>Source Lead Name</label><span>{{ c.sourceLeadName || '—' }}</span></div>
+                    <div class="expanded-item"><label>Created By ID</label><span>{{ c.createdById || '—' }}</span></div>
+                    <div class="expanded-item"><label>Created By Name</label><span>{{ c.createdByName || '—' }}</span></div>
+                    <div class="expanded-item"><label>Created At</label><span>{{ formatDate(c.createdAt) }}</span></div>
+                    <div class="expanded-item"><label>Updated At</label><span>{{ formatDate(c.updatedAt) }}</span></div>
+                  </div>
+                </div>
+
+                <!-- Action -->
+                <div class="expanded-actions">
+                  <button class="btn-view-profile"
+                          (click)="$event.stopPropagation(); openCustomerProfile(c.id)">
+                    View Full Profile →
+                  </button>
+                </div>
+
+              </div>
+            </td>
+          </tr>
+        </ng-container>
+
+        <!-- Empty -->
+        <tr *ngIf="filteredCustomers.length === 0">
+          <td [attr.colspan]="userRole !== 'SALES' ? 13 : 12" class="empty-state-row">
+            <div class="empty-state">
+              <span class="empty-icon">👥</span>
+              <h3>{{ hasActiveFilter ? 'No matching customers' : 'No customers yet' }}</h3>
+              <p *ngIf="hasActiveFilter">Try adjusting your search or filter.</p>
+              <p *ngIf="!hasActiveFilter">Convert a lead to create your first customer.</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

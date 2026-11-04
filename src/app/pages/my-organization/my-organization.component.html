@@ -1,0 +1,153 @@
+<div class="org-container">
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+  <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-box">
+    <div class="spinner"></div>
+    <p>Loading...</p>
+  </div>
+
+  <!-- TREE VIEW -->
+  <div *ngIf="!loading" class="tree-wrapper">
+    
+    <!-- ROOT NODE -->
+    <div class="tree-root-branch">
+      <div class="org-card root-card">
+        <div class="card-title">My Organization</div>
+        <button class="btn-add" (click)="adminRoots.length > 0 ? openAddUnder(adminRoots[0]) : null">
+          <span class="plus">+</span> Add User
+        </button>
+      </div>
+
+      <!-- CHILDREN (Recursive) -->
+      <div class="tree-children" *ngIf="adminRoots.length > 0 && childrenOf(adminRoots[0].id).length > 0">
+        <ng-container *ngTemplateOutlet="treeTemplate; context: { $implicit: childrenOf(adminRoots[0].id) }"></ng-container>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 🌟 Unassigned Users Section -->
+  <div *ngIf="!loading && unassignedUsers.length > 0" class="unassigned-section">
+    <div class="unassigned-header">
+      <h3>Unassigned Users ({{ unassignedUsers.length }})</h3>
+      <p>Attach these users to a supervisor using the "+ Add User" button.</p>
+    </div>
+    
+    <div class="unassigned-grid">
+      <!-- ✅ Card वर click इव्हेंट -->
+      <div *ngFor="let u of unassignedUsers" 
+           class="unassigned-card"
+           (click)="openProfile(u.id)"
+           style="cursor: pointer;"
+           title="Click to view profile">
+        
+        <div class="uc-avatar">{{ u.firstName[0] }}{{ u.lastName ? u.lastName[0] : '' }}</div>
+        
+        <div class="uc-info">
+          <strong>{{ displayName(u) }}</strong>
+          <span class="uc-role" [ngClass]="u.role.toLowerCase()">{{ roleLabel(u.role) }}</span>
+          <span class="uc-email">{{ u.email }}</span>
+          
+          <!-- ✅ Unassigned असल्यास "No Supervisor" दाखवा -->
+          <span class="uc-manager unassigned">
+            ⚠ No Supervisor
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- RECURSIVE TEMPLATE FOR CARDS & LINES                         -->
+<!-- ============================================================ -->
+<ng-template #treeTemplate let-nodes>
+  <div class="tree-row">
+    <div *ngFor="let node of nodes" class="tree-branch" [class.has-children]="node.children.length > 0">
+      
+      <!-- ✅ USER CARD (Card वर click इव्हेंट) -->
+      <div class="org-card user-card" 
+           (click)="openProfile(node.id)"
+           style="cursor: pointer;"
+           title="Click to view profile">
+        
+        <!-- Role Badge -->
+        <div class="card-role-badge" [ngClass]="node.role.toLowerCase()">{{ roleLabel(node.role) }}</div>
+        
+        <div class="card-title">{{ displayName(node) }}</div>
+        <div class="card-subtitle">{{ node.email }}</div>
+
+        <!-- ✅ कोणाच्या अंतर्गत आहे (Manager चे नाव) -->
+        <div class="card-manager" *ngIf="node.reportsToName">
+          👤 {{ node.reportsToName }}
+        </div>
+        
+        <div class="card-footer">
+          <!-- ⚠️ stopPropagation जेणेकरून Card क्लिक होणार नाही -->
+          <button class="btn-add" 
+                  (click)="openAddUnder(node); $event.stopPropagation()" 
+                  *ngIf="canHaveChildren(node)">
+            <span class="plus">+</span> Add
+          </button>
+          
+          <button class="btn-trash" 
+                  (click)="unlinkUser(node); $event.stopPropagation()" 
+                  title="Remove from supervisor" 
+                  *ngIf="node.role !== 'ADMIN' && node.reportsToId !== null">
+            🗑
+          </button>
+        </div>
+      </div>
+
+      <!-- CHILDREN -->
+      <div class="tree-children" *ngIf="node.children.length > 0">
+        <ng-container *ngTemplateOutlet="treeTemplate; context: { $implicit: node.children }"></ng-container>
+      </div>
+      
+    </div>
+  </div>
+</ng-template>
+
+<!-- ============================================================ -->
+<!-- ADD USER MODAL                                               -->
+<!-- ============================================================ -->
+<div *ngIf="showModal" class="modal-backdrop" (click)="closeModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Add User Under {{ modalParentLabel }}</h2>
+      <button class="btn-close" (click)="closeModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <label class="field-label">Select User</label>
+      <select class="field-input" [(ngModel)]="modalSelectedUserId" (ngModelChange)="onUserSelected()">
+        <option [ngValue]="null">-- Select --</option>
+        <option *ngFor="let u of eligibleUsersForModal" [ngValue]="u.id">
+          {{ displayName(u) }} ({{ u.role }})
+        </option>
+      </select>
+
+      <label class="field-label" style="margin-top: 15px;">Role</label>
+      <select class="field-input" [(ngModel)]="modalSelectedRole" [disabled]="!modalSelectedUserId">
+        <option *ngFor="let r of availableRolesForParent()" [ngValue]="r">
+          {{ roleLabel(r) }}
+        </option>
+      </select>
+
+      <p *ngIf="modalWarning" class="warn-box">⚠ {{ modalWarning }}</p>
+      <div *ngIf="modalError" class="alert alert-error" style="margin-top: 15px;">{{ modalError }}</div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeModal()" [disabled]="saving">Cancel</button>
+      <button class="btn-save" (click)="saveModal()" [disabled]="saving">
+        {{ saving ? 'Saving...' : 'Save' }}
+      </button>
+    </div>
+  </div>
+</div>

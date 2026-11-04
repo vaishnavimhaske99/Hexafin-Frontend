@@ -1,0 +1,608 @@
+<div class="profile-page">
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="state-message">
+    <div class="loader"></div>
+    <p>Loading customer profile...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="!loading && errorMessage" class="error-message">
+    <p>{{ errorMessage }}</p>
+    <button class="btn btn-primary" (click)="goBack()">← Back to Customers</button>
+  </div>
+
+  <!-- Profile -->
+  <ng-container *ngIf="!loading && customer">
+
+    <!-- ═══════════ HEADER ═══════════ -->
+    <header class="page-header">
+      <div class="header-left">
+        <button class="back-button" (click)="goBack()">← Back to Customers</button>
+        <h1>{{ fullName }}</h1>
+        <p class="company-name">
+          {{ customer.email || 'No Email' }}
+          <span class="customer-id">Customer #{{ customer.id }}</span>
+        </p>
+      </div>
+      <div class="header-right">
+        <span class="urgency-badge" [ngClass]="urgencyClass(customer.urgency)"
+              *ngIf="customer.urgency && !editMode">
+          {{ customer.urgency }} Priority
+        </span>
+        <span class="status-pill"
+              [ngClass]="'status-' + (customer.loanStatus || 'pending').toLowerCase()"
+              *ngIf="!editMode">
+          {{ customer.loanStatus || 'PENDING' }}
+        </span>
+
+        <!-- ✅ EDIT / SAVE / CANCEL Buttons -->
+        <button class="btn btn-primary" *ngIf="!editMode" (click)="startEdit()">
+          ✏ Edit Profile
+        </button>
+        <ng-container *ngIf="editMode">
+          <button class="btn btn-outline" (click)="cancelEdit()" [disabled]="saving">
+            Cancel
+          </button>
+          <button class="btn btn-success" (click)="saveEdit()" [disabled]="saving">
+            {{ saving ? '⏳ Saving...' : '💾 Save Changes' }}
+          </button>
+        </ng-container>
+      </div>
+    </header>
+
+    <!-- Save error -->
+    <div *ngIf="saveError" class="error-message" style="margin-bottom: 16px;">
+      <p>{{ saveError }}</p>
+    </div>
+
+    <!-- ═══════════ LAYOUT ═══════════ -->
+    <div class="profile-layout">
+
+      <!-- ═══════════ SIDEBAR ═══════════ -->
+      <aside class="contact-card">
+        <div class="avatar">{{ initials }}</div>
+        <h2>{{ fullName }}</h2>
+
+        <div class="contact-divider"></div>
+
+        <div class="contact-detail">
+          <span class="detail-icon">✉</span>
+          <div>
+            <small>Email</small>
+            <a [href]="'mailto:' + (customer.email || '')" *ngIf="!editMode">{{ customer.email || 'N/A' }}</a>
+            <input *ngIf="editMode" [(ngModel)]="editForm.email" type="email" class="edit-input-sm" />
+          </div>
+        </div>
+
+        <div class="contact-detail">
+          <span class="detail-icon">☎</span>
+          <div>
+            <small>Phone</small>
+            <a [href]="'tel:' + (customer.phone || '')" *ngIf="!editMode">{{ customer.phone || 'N/A' }}</a>
+            <input *ngIf="editMode" [(ngModel)]="editForm.phone" type="tel" class="edit-input-sm" />
+          </div>
+        </div>
+
+        <div class="contact-detail" *ngIf="customer.alternatePhone || editMode">
+          <span class="detail-icon">☎</span>
+          <div>
+            <small>Alternate Phone</small>
+            <a [href]="'tel:' + customer.alternatePhone" *ngIf="!editMode">{{ customer.alternatePhone }}</a>
+            <input *ngIf="editMode" [(ngModel)]="editForm.alternatePhone" type="tel" class="edit-input-sm" />
+          </div>
+        </div>
+
+        <div class="contact-detail" *ngIf="customer.sourceLeadName && !editMode">
+          <span class="detail-icon">🔗</span>
+          <div>
+            <small>Converted From</small>
+            <strong>{{ customer.sourceLeadName }}</strong>
+          </div>
+        </div>
+
+        <div class="contact-divider"></div>
+
+        <!-- Loan summary -->
+        <div class="loan-summary">
+          <div class="summary-item">
+            <small>Loan Type</small>
+            <strong *ngIf="!editMode">{{ formatLoanType(customer.loanType) }}</strong>
+            <select *ngIf="editMode" [(ngModel)]="editForm.loanType" class="edit-input-sm">
+              <option value="">—</option>
+              <option *ngFor="let t of loanTypes" [value]="t">{{ formatLoanType(t) }}</option>
+            </select>
+          </div>
+          <div class="summary-item">
+            <small>Amount</small>
+            <strong *ngIf="!editMode">₹{{ customer.loanAmount | number:'1.0-0' }}</strong>
+            <input *ngIf="editMode" [(ngModel)]="editForm.loanAmount" type="number" class="edit-input-sm" />
+          </div>
+          <div class="summary-item">
+            <small>CIBIL</small>
+            <strong [ngClass]="cibilClass(customer.cibilScore)" *ngIf="!editMode">
+              {{ customer.cibilScore || '—' }}
+            </strong>
+            <input *ngIf="editMode" [(ngModel)]="editForm.cibilScore" type="number" min="300" max="900" class="edit-input-sm" />
+          </div>
+          <div class="summary-item">
+            <small>Tenure</small>
+            <strong *ngIf="!editMode">{{ customer.tenureMonths || '—' }} mo</strong>
+            <input *ngIf="editMode" [(ngModel)]="editForm.tenureMonths" type="number" class="edit-input-sm" />
+          </div>
+        </div>
+
+        <!-- Annual income -->
+        <div class="emi-highlight" *ngIf="customer.annualIncome || editMode">
+          <small>Annual Income</small>
+          <strong *ngIf="!editMode">₹{{ customer.annualIncome | number:'1.0-0' }}</strong>
+          <span *ngIf="editMode" class="auto-calc">Auto (salary × 12)</span>
+        </div>
+
+        <!-- Calculated EMI -->
+        <div class="emi-highlight" *ngIf="calculatedEmi > 0 && !editMode">
+          <small>Monthly EMI</small>
+          <strong>₹{{ calculatedEmi | number:'1.0-0' }}</strong>
+        </div>
+
+        <!-- Docs progress (live) -->
+        <div class="doc-progress">
+          <small>Documents Progress</small>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="(currentDocCount / 7) * 100"></div>
+          </div>
+          <span class="progress-label">{{ currentDocCount }} / 7 completed</span>
+        </div>
+      </aside>
+
+      <!-- ═══════════ MAIN CONTENT ═══════════ -->
+      <main class="main-content">
+
+        <!-- Tabs -->
+        <nav class="tabs">
+          <button *ngFor="let tab of tabs"
+                  class="tab-button"
+                  [class.active]="activeTab === tab.id"
+                  (click)="setActiveTab(tab.id)">
+            {{ tab.label }}
+          </button>
+        </nav>
+
+        <!-- ═══════════ OVERVIEW ═══════════ -->
+        <section class="content-card" *ngIf="activeTab === 'overview'">
+          <div class="section-heading"><h2>Customer Overview</h2></div>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>First Name</label>
+              <p *ngIf="!editMode">{{ customer.firstName || '—' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.firstName" type="text" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Last Name</label>
+              <p *ngIf="!editMode">{{ customer.lastName || '—' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.lastName" type="text" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Email</label>
+              <p *ngIf="!editMode">{{ customer.email || '—' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.email" type="email" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Phone</label>
+              <p *ngIf="!editMode">{{ customer.phone || '—' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.phone" type="tel" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Alternate Phone</label>
+              <p *ngIf="!editMode">{{ customer.alternatePhone || '—' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.alternatePhone" type="tel" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>City</label>
+              <p *ngIf="!editMode">{{ customer.city || '—' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.city" type="text" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>State</label>
+              <p *ngIf="!editMode">{{ customer.state || '—' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.state" type="text" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Pincode</label>
+              <p *ngIf="!editMode">{{ customer.pincode || '—' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.pincode" type="text" maxlength="6" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Country</label>
+              <p *ngIf="!editMode">{{ customer.country || '—' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.country" type="text" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Lead Source</label>
+              <p *ngIf="!editMode">{{ formatEnum(customer.leadSource) }}</p>
+              <select *ngIf="editMode" [(ngModel)]="editForm.leadSource" class="edit-input">
+                <option value="">—</option>
+                <option *ngFor="let s of leadSources" [value]="s">{{ formatEnum(s) }}</option>
+              </select>
+            </div>
+            <div class="info-item">
+              <label>Created By</label>
+              <p>{{ customer.createdByName || '—' }}</p>
+            </div>
+            <div class="info-item">
+              <label>Created On</label>
+              <p>{{ formatDate(customer.createdAt) }}</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═══════════ KYC & PERSONAL ═══════════ -->
+        <section class="content-card" *ngIf="activeTab === 'kyc'">
+          <div class="section-heading"><h2>KYC & Personal Information</h2></div>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Date of Birth</label>
+              <p *ngIf="!editMode">{{ formatDate(customer.dateOfBirth) }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.dateOfBirth" type="date" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Gender</label>
+              <p *ngIf="!editMode">{{ formatEnum(customer.gender) }}</p>
+              <select *ngIf="editMode" [(ngModel)]="editForm.gender" class="edit-input">
+                <option value="">—</option>
+                <option *ngFor="let g of genders" [value]="g">{{ formatEnum(g) }}</option>
+              </select>
+            </div>
+            <div class="info-item">
+              <label>Marital Status</label>
+              <p *ngIf="!editMode">{{ formatEnum(customer.maritalStatus) }}</p>
+              <select *ngIf="editMode" [(ngModel)]="editForm.maritalStatus" class="edit-input">
+                <option value="">—</option>
+                <option *ngFor="let m of maritalStatuses" [value]="m">{{ formatEnum(m) }}</option>
+              </select>
+            </div>
+            <div class="info-item">
+              <label>PAN Number</label>
+              <p *ngIf="!editMode"><strong>{{ customer.panNumber || '—' }}</strong></p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.panNumber" type="text" maxlength="10" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Aadhaar Number</label>
+              <p *ngIf="!editMode"><strong>{{ customer.aadhaarNumber || '—' }}</strong></p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.aadhaarNumber" type="text" maxlength="12" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Photo URL</label>
+              <p *ngIf="!editMode">{{ customer.photoUrl || '—' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.photoUrl" type="text" class="edit-input" />
+            </div>
+          </div>
+
+          <div class="section-heading"><h2>Address</h2></div>
+          <div class="info-grid">
+            <div class="info-item span-2">
+              <label>Address Line 1</label>
+              <p *ngIf="!editMode">{{ customer.addressLine1 || '—' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.addressLine1" type="text" class="edit-input" />
+            </div>
+            <div class="info-item span-2">
+              <label>Address Line 2</label>
+              <p *ngIf="!editMode">{{ customer.addressLine2 || '—' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.addressLine2" type="text" class="edit-input" />
+            </div>
+            <div class="info-item span-2">
+              <label>Permanent Address</label>
+              <p *ngIf="!editMode">{{ customer.permanentAddress || '—' }}</p>
+              <textarea *ngIf="editMode" [(ngModel)]="editForm.permanentAddress" rows="2" class="edit-input"></textarea>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═══════════ EMPLOYMENT ═══════════ -->
+        <section class="content-card" *ngIf="activeTab === 'employment'">
+          <div class="section-heading"><h2>Employment & Income</h2></div>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Employment Type</label>
+              <p *ngIf="!editMode">{{ formatEnum(customer.employmentType) }}</p>
+              <select *ngIf="editMode" [(ngModel)]="editForm.employmentType" class="edit-input">
+                <option value="">—</option>
+                <option *ngFor="let t of employmentTypes" [value]="t">{{ formatEnum(t) }}</option>
+              </select>
+            </div>
+            <div class="info-item">
+              <label>Company</label>
+              <p *ngIf="!editMode"><strong>{{ customer.companyName || '—' }}</strong></p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.companyName" type="text" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Designation</label>
+              <p *ngIf="!editMode">{{ customer.designation || '—' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.designation" type="text" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Experience</label>
+              <p *ngIf="!editMode">{{ customer.experienceYears || '—' }} yrs</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.experienceYears" type="number" min="0" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>ITR Filed</label>
+              <p *ngIf="!editMode">{{ customer.itrFiled ? 'Yes' : 'No' }}</p>
+              <label *ngIf="editMode" class="edit-checkbox">
+                <input type="checkbox" [(ngModel)]="editForm.itrFiled" />
+                <span>ITR Filed</span>
+              </label>
+            </div>
+            <div class="info-item">
+              <label>Monthly Salary</label>
+              <p *ngIf="!editMode">₹{{ customer.monthlyIncome | number:'1.0-0' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.monthlyIncome" type="number" min="0" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Other Income</label>
+              <p *ngIf="!editMode">₹{{ customer.otherIncome | number:'1.0-0' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.otherIncome" type="number" min="0" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Annual Income</label>
+              <p><strong>₹{{ customer.annualIncome | number:'1.0-0' }}</strong></p>
+            </div>
+            <div class="info-item">
+              <label>Existing EMI</label>
+              <p *ngIf="!editMode">₹{{ customer.existingEmi | number:'1.0-0' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.existingEmi" type="number" min="0" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Bank Name</label>
+              <p *ngIf="!editMode">{{ customer.bankName || '—' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.bankName" type="text" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Account Number</label>
+              <p *ngIf="!editMode">{{ customer.accountNumber || '—' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.accountNumber" type="text" class="edit-input" />
+            </div>
+          </div>
+        </section>
+
+        <!-- ═══════════ LOAN DETAILS ═══════════ -->
+        <section class="content-card" *ngIf="activeTab === 'loan'">
+          <div class="section-heading"><h2>Current Loan Requirement</h2></div>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Loan Type</label>
+              <p *ngIf="!editMode">{{ formatLoanType(customer.loanType) }}</p>
+              <select *ngIf="editMode" [(ngModel)]="editForm.loanType" class="edit-input">
+                <option value="">—</option>
+                <option *ngFor="let t of loanTypes" [value]="t">{{ formatLoanType(t) }}</option>
+              </select>
+            </div>
+            <div class="info-item">
+              <label>Purpose</label>
+              <p *ngIf="!editMode">{{ customer.loanPurpose || '—' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.loanPurpose" type="text" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Loan Amount</label>
+              <p *ngIf="!editMode">₹{{ customer.loanAmount | number:'1.0-0' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.loanAmount" type="number" min="0" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Interest Rate</label>
+              <p *ngIf="!editMode">{{ customer.interestRate || '—' }}%</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.interestRate" type="number" step="0.01" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Tenure</label>
+              <p *ngIf="!editMode">{{ customer.tenureMonths || '—' }} months</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.tenureMonths" type="number" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Expected EMI</label>
+              <p *ngIf="!editMode">₹{{ customer.expectedEmi | number:'1.0-0' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.expectedEmi" type="number" min="0" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Down Payment</label>
+              <p *ngIf="!editMode">₹{{ customer.downPayment | number:'1.0-0' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.downPayment" type="number" min="0" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Urgency</label>
+              <p *ngIf="!editMode">
+                <span class="urgency-badge" [ngClass]="urgencyClass(customer.urgency)"
+                       *ngIf="customer.urgency">{{ customer.urgency }}</span>
+                <span *ngIf="!customer.urgency">—</span>
+              </p>
+              <select *ngIf="editMode" [(ngModel)]="editForm.urgency" class="edit-input">
+                <option *ngFor="let u of urgencies" [value]="u">{{ u }}</option>
+              </select>
+            </div>
+            <div class="info-item">
+              <label>Calculated EMI</label>
+              <p><strong>₹{{ calculatedEmi | number:'1.0-0' }}</strong></p>
+            </div>
+            <div class="info-item">
+              <label>CIBIL Score</label>
+              <p *ngIf="!editMode">
+                <strong [ngClass]="cibilClass(customer.cibilScore)">
+                  {{ customer.cibilScore || '—' }}
+                </strong>
+              </p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.cibilScore" type="number" min="300" max="900" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Property Value</label>
+              <p *ngIf="!editMode">₹{{ customer.propertyValue | number:'1.0-0' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.propertyValue" type="number" min="0" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Loan Status</label>
+              <p *ngIf="!editMode">{{ customer.loanStatus || 'PENDING' }}</p>
+              <select *ngIf="editMode" [(ngModel)]="editForm.loanStatus" class="edit-input">
+                <option *ngFor="let s of loanStatuses" [value]="s">{{ s }}</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═══════════ PREVIOUS LOANS ═══════════ -->
+        <section class="content-card" *ngIf="activeTab === 'previous'">
+          <div class="section-heading"><h2>Previous Loan History</h2></div>
+
+          <!-- Edit mode toggle -->
+          <div class="info-item" *ngIf="editMode" style="margin-bottom: 16px;">
+            <label class="edit-checkbox">
+              <input type="checkbox" [(ngModel)]="editForm.previousLoanTaken" />
+              <span>Has taken previous loan?</span>
+            </label>
+          </div>
+
+          <div *ngIf="!customer.previousLoanTaken && !editMode" class="empty-state">
+            <span class="empty-icon">✅</span>
+            <h3>No previous loans</h3>
+            <p>Customer has not taken any prior loans.</p>
+          </div>
+
+          <div class="info-grid" *ngIf="(customer.previousLoanTaken && !editMode) || (editMode && editForm.previousLoanTaken)">
+            <div class="info-item">
+              <label>Loan Type</label>
+              <p *ngIf="!editMode">{{ formatEnum(customer.previousLoanType) }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.previousLoanType" type="text" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Lender</label>
+              <p *ngIf="!editMode">{{ customer.previousLoanLender || '—' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.previousLoanLender" type="text" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Loan Amount</label>
+              <p *ngIf="!editMode">₹{{ customer.previousLoanAmount | number:'1.0-0' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.previousLoanAmount" type="number" min="0" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>EMI</label>
+              <p *ngIf="!editMode">₹{{ customer.previousLoanEmi | number:'1.0-0' }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.previousLoanEmi" type="number" min="0" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Tenure</label>
+              <p *ngIf="!editMode">{{ customer.previousLoanTenure || '—' }} months</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.previousLoanTenure" type="number" min="0" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Status</label>
+              <p *ngIf="!editMode">{{ formatEnum(customer.previousLoanStatus) }}</p>
+              <select *ngIf="editMode" [(ngModel)]="editForm.previousLoanStatus" class="edit-input">
+                <option value="">—</option>
+                <option *ngFor="let s of previousLoanStatuses" [value]="s">{{ s }}</option>
+              </select>
+            </div>
+            <div class="info-item">
+              <label>Repayment History</label>
+              <p *ngIf="!editMode">{{ formatEnum(customer.previousRepaymentHistory) }}</p>
+              <select *ngIf="editMode" [(ngModel)]="editForm.previousRepaymentHistory" class="edit-input">
+                <option value="">—</option>
+                <option *ngFor="let r of repaymentHistories" [value]="r">{{ r }}</option>
+              </select>
+            </div>
+            <div class="info-item span-2">
+              <label>Reason</label>
+              <p *ngIf="!editMode">{{ customer.previousLoanReason || '—' }}</p>
+              <textarea *ngIf="editMode" [(ngModel)]="editForm.previousLoanReason" rows="2" class="edit-input"></textarea>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═══════════ DOCUMENTS ═══════════ -->
+       <!-- ═══════════ DOCUMENTS (checklist — existing, same theva) ═══════════ -->
+<section class="content-card" *ngIf="activeTab === 'documents'">
+  <div class="section-heading"><h2>Documents Checklist</h2></div>
+  <div class="doc-checklist">
+    <!-- ...existing 7 checkboxes... -->
+  </div>
+
+  <!-- ✅ NEW — FILE UPLOADS -->
+  <div class="section-heading" style="margin-top: 28px;">
+    <h2>Uploaded Files</h2>
+  </div>
+
+  <div class="doc-upload-grid">
+    <div *ngFor="let type of documentTypes" class="doc-upload-card">
+
+      <!-- Header -->
+      <div class="doc-upload-header">
+        <span class="doc-type-icon">{{ type.icon }}</span>
+        <span class="doc-type-name">{{ type.label }}</span>
+        <span class="doc-status" [class.uploaded]="getDocUrl(type.value)">
+          {{ getDocUrl(type.value) ? '✓' : '○' }}
+        </span>
+      </div>
+
+      <!-- Uploaded file -->
+      <div *ngIf="getDocUrl(type.value)" class="doc-file-row">
+        <span class="doc-file-name" [title]="getFileName(getDocUrl(type.value))">
+          📄 {{ getFileName(getDocUrl(type.value)) }}
+        </span>
+        <div class="doc-file-actions">
+          <button class="doc-action-btn" (click)="downloadDoc(type.value)" title="Download">⬇</button>
+          <button class="doc-action-btn danger" (click)="deleteDoc(type.value)" title="Delete">🗑</button>
+        </div>
+      </div>
+
+      <!-- No file -->
+      <div *ngIf="!getDocUrl(type.value)" class="doc-empty">No file uploaded</div>
+
+      <!-- Upload button -->
+      <label class="doc-upload-btn" [class.uploading]="uploadingType === type.value">
+        <input type="file"
+               (change)="onFileSelect($event, type.value)"
+               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+               hidden />
+        <span *ngIf="uploadingType !== type.value">+ Upload File</span>
+        <span *ngIf="uploadingType === type.value">⏳ Uploading...</span>
+      </label>
+
+    </div>
+  </div>
+</section>
+        <!-- ═══════════ CONSULTATION ═══════════ -->
+        <section class="content-card" *ngIf="activeTab === 'consultation'">
+          <div class="section-heading"><h2>Consultation & Follow-up</h2></div>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Lead Source</label>
+              <p *ngIf="!editMode">{{ formatEnum(customer.leadSource) }}</p>
+              <select *ngIf="editMode" [(ngModel)]="editForm.leadSource" class="edit-input">
+                <option value="">—</option>
+                <option *ngFor="let s of leadSources" [value]="s">{{ formatEnum(s) }}</option>
+              </select>
+            </div>
+            <div class="info-item">
+              <label>Assigned Rep</label>
+              <p>{{ customer.createdByName || '—' }}</p>
+            </div>
+            <div class="info-item">
+              <label>Next Follow-up</label>
+              <p *ngIf="!editMode">{{ formatDate(customer.nextFollowUp) }}</p>
+              <input *ngIf="editMode" [(ngModel)]="editForm.nextFollowUp" type="date" class="edit-input" />
+            </div>
+            <div class="info-item">
+              <label>Loan Status</label>
+              <p *ngIf="!editMode">{{ customer.loanStatus || 'PENDING' }}</p>
+              <select *ngIf="editMode" [(ngModel)]="editForm.loanStatus" class="edit-input">
+                <option *ngFor="let s of loanStatuses" [value]="s">{{ s }}</option>
+              </select>
+            </div>
+            <div class="info-item span-2">
+              <label>Notes</label>
+              <p *ngIf="!editMode">{{ customer.notes || '—' }}</p>
+              <textarea *ngIf="editMode" [(ngModel)]="editForm.notes" rows="3" class="edit-input"></textarea>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </ng-container>
+</div>

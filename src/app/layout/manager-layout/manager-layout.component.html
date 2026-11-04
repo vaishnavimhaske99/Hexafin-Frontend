@@ -1,0 +1,43 @@
+<div class="manager-layout">
+
+  <!-- Sidebar -->
+  <app-manager-sidebar 
+    [class.mobile-open]="sidebarOpen">
+  </app-manager-sidebar>
+
+  <!-- Main Content -->
+  <div class="main-wrapper">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <button class="menu-toggle" (click)="toggleSidebar()">
+        ☰
+      </button>
+      
+      <div class="topbar-left">
+        <h1 class="page-title">Manager Workspace</h1>
+        <p class="breadcrumb">
+          Home / Manager
+        </p>
+      </div>
+
+      <div class="topbar-right">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" placeholder="Search CRM..." />
+        </div>
+        
+        <button class="notification-btn">
+          🔔
+          <span class="badge">3</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <main class="content-area">
+      <router-outlet></router-outlet>
+    </main>
+
+  </div>
+</div>

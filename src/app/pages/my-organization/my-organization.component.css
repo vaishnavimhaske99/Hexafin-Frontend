@@ -1,0 +1,437 @@
+:host {
+  display: block;
+  background: #ffffff;
+  min-height: 100vh;
+  padding: 40px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.org-container {
+  max-width: 100%;
+  overflow-x: auto;
+  padding-bottom: 40px;
+}
+
+/* =========================================
+   TREE STRUCTURE & LINES
+   ========================================= */
+.tree-wrapper {
+  display: inline-block;
+  min-width: 100%;
+  text-align: center;
+}
+
+.tree-row {
+  display: flex;
+  justify-content: center;
+  position: relative;
+  padding-top: 30px;
+}
+
+.tree-branch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  padding: 0 15px;
+}
+
+/* Root node spacing */
+.tree-root-branch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Horizontal connecting line */
+.tree-row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #cbd5e1;
+}
+
+/* Prevent the horizontal line from stretching too far left/right */
+.tree-row > .tree-branch:first-child::before,
+.tree-row > .tree-branch:last-child::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 1px;
+  background: #ffffff; /* Hides the line extending beyond the first/last child */
+}
+
+.tree-row > .tree-branch:first-child::before {
+  left: 0;
+}
+.tree-row > .tree-branch:last-child::before {
+  right: 0;
+}
+
+/* Vertical line dropping down to each child */
+.tree-branch::before {
+  content: '';
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  width: 1px;
+  height: 30px;
+  background: #cbd5e1;
+  transform: translateX(-50%);
+}
+
+/* Parent to children vertical connector */
+.tree-branch.has-children > .org-card::after {
+  content: '';
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  width: 1px;
+  height: 30px;
+  background: #cbd5e1;
+  transform: translateX(-50%);
+}
+
+/* =========================================
+   CARDS
+   ========================================= */
+.org-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 12px 16px;
+  min-width: 180px;
+  max-width: 200px;
+  text-align: center;
+  position: relative;
+  z-index: 10;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  transition: all 0.2s ease;
+}
+
+.org-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* Root Card Styling */
+.root-card {
+  border: 2px solid #22c55e;
+  padding: 10px 20px;
+}
+
+.root-card .card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+
+/* Standard Card Styling */
+.card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-subtitle {
+  font-size: 11px;
+  color: #64748b;
+  margin-bottom: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Footer (Buttons) */
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 8px;
+  margin-top: 8px;
+}
+
+.btn-add {
+  background: transparent;
+  border: none;
+  color: #16a34a;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-add:hover {
+  text-decoration: underline;
+}
+
+.plus {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.btn-trash {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.btn-trash:hover {
+  color: #ef4444;
+}
+
+/* =========================================
+   MODAL & ALERTS
+   ========================================= */
+.alert { padding: 10px 14px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; text-align: left; }
+.alert-success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+.alert-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+.warn-box {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.loading-box { text-align: center; padding: 60px 0; color: #64748b; }
+.spinner {
+  width: 30px; height: 30px;
+  border: 3px solid #f1f5f9;
+  border-top-color: #22c55e;
+  border-radius: 50%;
+  margin: 0 auto 10px;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4);
+  display: flex; align-items: center; justify-content: center; z-index: 1000;
+}
+.modal-box {
+  background: #ffffff; border-radius: 8px; width: 90%; max-width: 400px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden;
+}
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 15px 20px; border-bottom: 1px solid #e2e8f0;
+}
+.modal-header h2 { margin: 0; font-size: 14px; font-weight: 600; color: #1e293b; }
+.btn-close { background: transparent; border: none; font-size: 16px; cursor: pointer; color: #94a3b8; }
+.modal-body { padding: 20px; text-align: left; }
+.field-label { display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px; }
+.field-input {
+  width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px;
+  font-size: 13px; outline: none; box-sizing: border-box;
+}
+.field-input:focus { border-color: #22c55e; box-shadow: 0 0 0 2px rgba(34,197,94,0.1); }
+.modal-footer {
+  display: flex; justify-content: flex-end; gap: 10px; padding: 15px 20px;
+  border-top: 1px solid #e2e8f0; background: #f8fafc;
+}
+.btn-cancel {
+  background: #ffffff; border: 1px solid #cbd5e1; padding: 6px 14px;
+  border-radius: 6px; cursor: pointer; color: #475569; font-size: 12px; font-weight: 600;
+}
+.btn-save {
+  background: #16a34a; border: none; padding: 6px 14px; border-radius: 6px;
+  cursor: pointer; color: #ffffff; font-weight: 600; font-size: 12px;
+}
+.btn-save:hover:not(:disabled) { background: #15803d; }
+.btn-save:disabled, .btn-cancel:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* =========================================
+   ROLE BADGES (Cards वर)
+   ========================================= */
+.card-role-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-bottom: 6px;
+}
+
+/* Role प्रमाणे रंग */
+.card-role-badge.admin      { background: #fee2e2; color: #991b1b; }
+.card-role-badge.manager    { background: #fef3c7; color: #92400e; }
+.card-role-badge.team_lead  { background: #dbeafe; color: #1e40af; }
+.card-role-badge.sales      { background: #dcfce7; color: #166534; }
+
+/* =========================================
+   UNASSIGNED USERS SECTION
+   ========================================= */
+.unassigned-section {
+  margin-top: 40px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 24px;
+}
+
+.unassigned-header {
+  margin-bottom: 20px;
+}
+
+.unassigned-header h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+  color: #0f172a;
+}
+
+.unassigned-header p {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.unassigned-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.unassigned-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  transition: 0.2s;
+}
+
+.unassigned-card:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.uc-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #64748b;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.uc-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.uc-info strong {
+  font-size: 13px;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.uc-role {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.uc-role.admin     { color: #991b1b; }
+.uc-role.manager   { color: #92400e; }
+.uc-role.team_lead { color: #1e40af; }
+.uc-role.sales     { color: #166534; }
+
+.uc-email {
+  font-size: 11px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* =========================================
+   CARD MANAGER INFO (कोणाच्या अंतर्गत आहे)
+   ========================================= */
+.card-manager {
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: #f8fafc;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #1e40af;
+  border: 1px dashed #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+/* =========================================
+   CARD HOVER EFFECTS
+   ========================================= */
+.org-card.user-card {
+  transition: all 0.2s ease;
+}
+
+.org-card.user-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  border-color: #bfdbfe;
+}
+
+.unassigned-card {
+  transition: all 0.2s ease;
+}
+
+.unassigned-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  border-color: #bfdbfe;
+}
+
+/* =========================================
+   UNASSIGNED MANAGER BADGE
+   ========================================= */
+.uc-manager.unassigned {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #92400e;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 4px;
+  width: fit-content;
+}
