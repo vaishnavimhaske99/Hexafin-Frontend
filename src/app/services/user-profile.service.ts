@@ -22,7 +22,7 @@ export interface UserProfile {
 })
 export class UserProfileService {
 
-  private readonly apiUrl = 'http://localhost:8080/api/users';
+  private readonly apiUrl = 'https://api.hexafin.cloud/api/users';
 
   constructor(
     private http: HttpClient,

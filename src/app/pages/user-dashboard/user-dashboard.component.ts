@@ -44,7 +44,7 @@ export class UserDashboardComponent implements OnInit {
   stats: DashboardStat[] = [];
   productSummaries: ProductSummary[] = [];
 
-  private readonly apiUrl = 'http://localhost:8080/api'; // ✅ API URL
+  private readonly apiUrl = 'https://api.hexafin.cloud/api'; // ✅ API URL
 
   get isAdminViewingSalesUser(): boolean {
     return this.salesUserId !== null;

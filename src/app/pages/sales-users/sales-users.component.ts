@@ -33,8 +33,7 @@ export class SalesUsersComponent implements OnInit {
   errorMessage = '';
   searchText = '';
   selectedStatus = 'ALL';
-
-  private readonly usersUrl = 'http://localhost:8080/api/users';
+private readonly usersUrl = 'https://api.hexafin.cloud/api/users';
 
   constructor(private http: HttpClient,
      private router: Router

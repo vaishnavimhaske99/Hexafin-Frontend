@@ -16,7 +16,7 @@ export interface DashboardStats {
 })
 export class DashboardService {
 
-  private readonly apiUrl = 'http://localhost:8080/api/dashboard/admin';
+  private readonly apiUrl = 'https://api.hexafin.cloud/api/dashboard/admin';
 
   constructor(private http: HttpClient) {}
 

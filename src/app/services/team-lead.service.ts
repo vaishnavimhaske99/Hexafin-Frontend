@@ -31,8 +31,8 @@ export interface LeadDto {
 @Injectable({ providedIn: 'root' })
 export class TeamLeadService {
 
-  private readonly usersUrl = 'http://localhost:8080/api/users';
-  private readonly leadsUrl = 'http://localhost:8080/api/leads';
+  private readonly usersUrl = 'https://api.hexafin.cloud/api/users';
+  private readonly leadsUrl = 'https://api.hexafin.cloud/api/leads';
 
   constructor(private http: HttpClient) {}
 

@@ -133,8 +133,8 @@ export interface LeadNoteRequest {
 })
 export class LeadService {
 
-  private readonly apiUrl = 'http://localhost:8080/api/leads';
-  private readonly adminUrl = 'http://localhost:8080/api/admin';
+  private readonly apiUrl = 'https://api.hexafin.cloud/api/leads';
+  private readonly adminUrl = 'https://api.hexafin.cloud/api/admin';
 
   constructor(private http: HttpClient,
     
@@ -169,7 +169,7 @@ getLeadsByAssignedTo(userId: number): Observable<Lead[]> {
 }
 getLeadsAssignedToUser(userId: number): Observable<Lead[]> {
   return this.http.get<Lead[]>(
-    `http://localhost:8080/api/leads/assigned-to/${userId}`,
+    `https://api.hexafin.cloud/api/leads/assigned-to/${userId}`,
     { headers: this.getAuthHeaders() }
   );
 }

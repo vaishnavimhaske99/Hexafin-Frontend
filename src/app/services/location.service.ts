@@ -14,7 +14,7 @@ export interface LocationUpdateRequest {
 })
 export class LocationService {
 
-  private readonly apiUrl = 'http://localhost:8080/api/locations';
+  private readonly apiUrl = 'https://api.hexafin.cloud/api/locations';
 
   constructor(private http: HttpClient) {}
 

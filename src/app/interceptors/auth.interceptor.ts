@@ -24,7 +24,7 @@ export class AuthInterceptor implements HttpInterceptor {
     const token = this.authService.getToken();
 
     const isApiRequest = request.url.startsWith(
-      'http://localhost:8080/api/'
+      'https://api.hexafin.cloud/api/'
     );
 
     const isPublicAuthRequest =

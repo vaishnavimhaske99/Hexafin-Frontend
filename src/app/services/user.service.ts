@@ -50,8 +50,8 @@ export interface LeadResponseDTO {
 })
 export class UserService {
 
-  private readonly apiUrl = 'http://localhost:8080/api/users';
-  private readonly leadsUrl = 'http://localhost:8080/api/leads';
+  private readonly apiUrl = 'https://api.hexafin.cloud/api/users';
+  private readonly leadsUrl = 'https://api.hexafin.cloud/api/leads';
 
   constructor(private http: HttpClient) {}
 

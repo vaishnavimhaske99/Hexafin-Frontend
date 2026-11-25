@@ -51,8 +51,7 @@ export class LeadsComponent implements OnInit {
 
   leads: Lead[] = [];
   allUsers: UserDto[] = [];
-
-  apiUrl = 'http://localhost:8080/api';
+apiUrl = 'https://api.hexafin.cloud/api';
 
  userRole: string =
   (

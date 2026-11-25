@@ -37,7 +37,7 @@ export interface NotificationPage {
 })
 export class NotificationService {
 
-  private apiUrl = 'http://localhost:8080/api/notifications';
+  private apiUrl = 'https://api.hexafin.cloud/api/notifications';
 
   constructor(private http: HttpClient) {}
 

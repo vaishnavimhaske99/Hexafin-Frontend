@@ -56,7 +56,7 @@ export class DashboardComponent implements OnInit {
   showRoleUsersModal = false;
   selectedRoleFilter = '';
 
-  private apiUrl = 'http://localhost:8080/api';
+  private apiUrl = 'https://api.hexafin.cloud/api';
 
   constructor(
     private http: HttpClient,

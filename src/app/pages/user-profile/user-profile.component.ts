@@ -74,7 +74,7 @@ locationErrorMessage = '';
   leads: ProfileLead[] = [];
   salesUsers: any[] = [];
 
-  private readonly apiUrl = 'http://localhost:8080/api';
+  private readonly apiUrl = 'https://api.hexafin.cloud/api';
 
   constructor(
     private router: Router,

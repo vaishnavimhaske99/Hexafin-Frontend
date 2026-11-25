@@ -36,7 +36,7 @@ export interface LoginResponse {
 })
 export class AuthService {
 
-  private readonly apiUrl = 'http://localhost:8080/api/auth';
+private readonly apiUrl = 'https://api.hexafin.cloud/api/auth';
 
   constructor(private http: HttpClient) {}
 

@@ -105,7 +105,7 @@ export interface Customer extends CustomerRequest {
 })
 export class CustomerService {
 
-  private readonly apiUrl = 'http://localhost:8080/api/customers';
+  private readonly apiUrl = 'https://api.hexafin.cloud/api/customers';
 
   constructor(private http: HttpClient) {}
 

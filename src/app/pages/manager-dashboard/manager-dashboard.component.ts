@@ -56,7 +56,7 @@ export class ManagerDashboardComponent implements OnInit {
     conversionRate: 0
   };
 
-  private readonly apiUrl = 'http://localhost:8080/api';
+  private readonly apiUrl = 'https://api.hexafin.cloud/api';
 
   constructor(
     private http: HttpClient,

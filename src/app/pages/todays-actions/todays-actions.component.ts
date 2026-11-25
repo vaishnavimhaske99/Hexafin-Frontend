@@ -39,7 +39,7 @@ export class TodaysActionsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   private apiUrl =
-    'http://localhost:8080/api/leads/activities/today';
+    'https://api.hexafin.cloud/api/leads/activities/today';
 
   constructor(private http: HttpClient) {}
 

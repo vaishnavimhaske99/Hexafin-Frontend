@@ -32,7 +32,7 @@ export class AdminLocationDashboardComponent implements OnInit, OnDestroy {
 
   private refreshTimer: ReturnType<typeof setInterval> | null = null;
 
-  private readonly apiUrl = 'http://localhost:8080/api/locations/all';
+private readonly apiUrl = 'https://api.hexafin.cloud/api/locations/all';
 
   constructor(private http: HttpClient) {}
 
