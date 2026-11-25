@@ -1,0 +1,321 @@
+
+<div class="notification-wrapper">
+
+  <!-- NOTIFICATION BELL -->
+  <button
+    type="button"
+    class="notification-bell"
+    (click)="toggleDropdown()"
+    aria-label="Open notifications">
+
+    <span class="bell-icon">🔔</span>
+
+    <span
+      class="notification-badge"
+      *ngIf="unreadCount > 0">
+      {{ unreadCount > 99 ? '99+' : unreadCount }}
+    </span>
+
+  </button>
+
+  <!-- NOTIFICATION DROPDOWN -->
+  <div
+    class="notification-dropdown"
+    *ngIf="showDropdown"
+    (click)="$event.stopPropagation()">
+
+    <!-- HEADER -->
+    <div class="notification-header">
+
+      <div>
+        <h3>Notifications</h3>
+        <p>
+          You have
+          <strong>{{ unreadCount }}</strong>
+          unread notifications
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="refresh-btn"
+        title="Refresh notifications"
+        [disabled]="refreshing"
+        (click)="refreshNotifications()">
+
+        <span [class.rotating]="refreshing">↻</span>
+      </button>
+
+    </div>
+
+    <!-- FILTER TABS -->
+    <div class="notification-filters">
+
+      <button
+        type="button"
+        [class.active]="activeFilter === 'all'"
+        (click)="setFilter('all')">
+        All
+      </button>
+
+      <button
+        type="button"
+        [class.active]="activeFilter === 'unread'"
+        (click)="setFilter('unread')">
+        Unread
+        <span *ngIf="unreadCount > 0">
+          {{ unreadCount }}
+        </span>
+      </button>
+
+      <button
+        type="button"
+        [class.active]="activeFilter === 'archived'"
+        (click)="setFilter('archived')">
+        Archived
+      </button>
+
+    </div>
+
+    <!-- SEARCH -->
+    <div class="notification-search">
+
+      <span>⌕</span>
+
+      <input
+        type="text"
+        placeholder="Search notifications..."
+        [value]="searchText"
+        (input)="onSearchChange($any($event.target).value)">
+
+      <button
+        type="button"
+        *ngIf="searchText"
+        (click)="onSearchChange('')">
+        ✕
+      </button>
+
+    </div>
+
+    <!-- CATEGORY FILTER -->
+    <div class="category-filters">
+
+      <button
+        type="button"
+        [class.selected]="activeCategory === 'ALL'"
+        (click)="setCategory('ALL')">
+        All
+      </button>
+
+      <button
+        type="button"
+        [class.selected]="activeCategory === 'LEAD'"
+        (click)="setCategory('LEAD')">
+        Leads
+      </button>
+
+      <button
+        type="button"
+        [class.selected]="activeCategory === 'LOCATION'"
+        (click)="setCategory('LOCATION')">
+        Location
+      </button>
+
+      <button
+        type="button"
+        [class.selected]="activeCategory === 'CHAT'"
+        (click)="setCategory('CHAT')">
+        Chat
+      </button>
+
+      <button
+        type="button"
+        [class.selected]="activeCategory === 'TASK'"
+        (click)="setCategory('TASK')">
+        Tasks
+      </button>
+
+    </div>
+
+    <!-- NOTIFICATION BODY -->
+    <div class="notification-body">
+
+      <!-- LOADING -->
+      <div
+        class="notification-loading"
+        *ngIf="loading">
+
+        <div class="loading-spinner"></div>
+        <p>Loading notifications...</p>
+
+      </div>
+
+      <!-- ERROR -->
+      <div
+        class="notification-error"
+        *ngIf="!loading && errorMessage">
+
+        <span>⚠️</span>
+        <p>{{ errorMessage }}</p>
+
+        <button
+          type="button"
+          (click)="refreshNotifications()">
+          Try Again
+        </button>
+
+      </div>
+
+      <!-- NOTIFICATION LIST -->
+      <ng-container *ngIf="!loading && !errorMessage">
+
+        <div class="notification-section-title">
+          <span>
+            {{ activeFilter === 'archived' ? 'Archived' : 'Recent Activity' }}
+          </span>
+
+          <button
+            type="button"
+            *ngIf="activeFilter !== 'archived' && unreadCount > 0"
+            (click)="markAllAsRead()">
+            Mark all as read
+          </button>
+        </div>
+
+        <div
+          class="notification-item"
+          *ngFor="let notification of notifications"
+          [class.unread]="!notification.isRead"
+          (click)="openNotification(notification)">
+
+          <!-- CATEGORY ICON -->
+          <div
+            class="notification-icon"
+            [ngClass]="notification.category?.toLowerCase()">
+
+            <ng-container [ngSwitch]="notification.category?.toUpperCase()">
+
+              <span *ngSwitchCase="'LOCATION'">📍</span>
+              <span *ngSwitchCase="'LEAD'">👤</span>
+              <span *ngSwitchCase="'CHAT'">💬</span>
+              <span *ngSwitchCase="'TASK'">📋</span>
+              <span *ngSwitchCase="'SYSTEM'">⚙️</span>
+              <span *ngSwitchDefault>🔔</span>
+
+            </ng-container>
+
+          </div>
+
+          <!-- CONTENT -->
+          <div class="notification-content">
+
+            <div class="notification-title-row">
+
+              <h4>{{ notification.title }}</h4>
+
+              <span
+                class="unread-dot"
+                *ngIf="!notification.isRead">
+              </span>
+
+            </div>
+
+            <p class="notification-message">
+              {{ notification.message }}
+            </p>
+
+            <div class="notification-meta">
+
+              <span class="notification-time">
+                {{ notification.createdAt | date:'dd MMM yyyy, hh:mm a' }}
+              </span>
+
+              <span
+                class="priority-label"
+                [ngClass]="notification.priority?.toLowerCase()">
+                {{ notification.priority }}
+              </span>
+
+            </div>
+
+            <div
+              class="notification-actor"
+              *ngIf="notification.actorName">
+              From: {{ notification.actorName }}
+            </div>
+
+          </div>
+
+          <!-- ACTIONS -->
+          <div class="notification-actions">
+
+            <button
+              type="button"
+              class="archive-btn"
+              title="Archive notification"
+              (click)="archiveNotification($event, notification)">
+              ×
+            </button>
+
+          </div>
+
+        </div>
+
+        <!-- EMPTY STATE -->
+        <div
+          class="notification-empty"
+          *ngIf="notifications.length === 0">
+
+          <div class="empty-icon">🔔</div>
+
+          <h4>No notifications found</h4>
+
+          <p>
+            You are all caught up.
+            New notifications will appear here.
+          </p>
+
+        </div>
+
+      </ng-container>
+
+    </div>
+
+    <!-- FOOTER / PAGINATION -->
+    <div
+      class="notification-footer"
+      *ngIf="!loading">
+
+      <div class="pagination-info">
+        Page {{ totalPages === 0 ? 0 : currentPage + 1 }}
+        of {{ totalPages }}
+      </div>
+
+      <div class="pagination-actions">
+
+        <button
+          type="button"
+          [disabled]="currentPage === 0"
+          (click)="previousPage()">
+          ←
+        </button>
+
+        <button
+          type="button"
+          [disabled]="currentPage + 1 >= totalPages"
+          (click)="nextPage()">
+          →
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- VIEW ALL -->
+    <div class="notification-bottom-link">
+      <span>CRM Notification Center</span>
+    </div>
+
+  </div>
+
+</div>

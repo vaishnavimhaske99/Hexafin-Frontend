@@ -95,7 +95,23 @@ export class UserService {
   getAllLeads(): Observable<LeadResponseDTO[]> {
     return this.http.get<LeadResponseDTO[]>(this.leadsUrl);
   }
+  // ═══════════════════════════════════════════════════════
+  // ✅ NEW METHODS — Deactivate & Reactivate User
+  // ═══════════════════════════════════════════════════════
 
+ 
+ // UserService मध्ये ऍड करा:
+
+  deactivateUser(id: number, reason: string): Observable<UserResponseDTO> {
+    return this.http.put<UserResponseDTO>(
+      `${this.apiUrl}/${id}/deactivate?reason=${encodeURIComponent(reason)}`, 
+      {}
+    );
+  }
+
+  reactivateUser(id: number): Observable<UserResponseDTO> {
+    return this.http.put<UserResponseDTO>(`${this.apiUrl}/${id}/reactivate`, {});
+  }
   // ═══════════════════════════════════════════════════════
   // ✅ NEW METHOD — Assign a lead to a sales user
   // PUT /api/leads/{leadId}/assign/{userId}

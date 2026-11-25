@@ -213,6 +213,7 @@ export class AuthService {
   hasUserId(): boolean {
     return this.getUserId() !== null;
   }
+  
 
   // LOGOUT
   logout(): void {

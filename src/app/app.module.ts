@@ -50,6 +50,9 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { CustomersComponent } from './pages/customers/customers.component';
 import { CustomerProfileComponent } from './pages/customers/customer-profile/customer-profile.component';
 import { ManagerSidebarComponent } from './layout/manager-sidebar/manager-sidebar.component';
+import { AnnouncementsComponent } from './pages/announcements/announcements.component';
+import { ChatComponent } from './pages/chat/chat.component';
+import { NotificationComponent } from './pages/notification/notification.component';
 
 @NgModule({
   declarations: [
@@ -75,6 +78,9 @@ import { ManagerSidebarComponent } from './layout/manager-sidebar/manager-sideba
     CustomersComponent,
     CustomerProfileComponent,
     ManagerSidebarComponent,
+    AnnouncementsComponent,
+    ChatComponent,
+    NotificationComponent,
     
   ],
   imports: [

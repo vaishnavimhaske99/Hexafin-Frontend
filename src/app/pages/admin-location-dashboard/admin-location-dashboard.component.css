@@ -1,0 +1,266 @@
+
+.location-dashboard {
+  padding: 26px;
+  background: #f5f7fb;
+  min-height: 100%;
+  color: #1e293b;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 26px;
+}
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: #64748b;
+}
+
+.page-header h2 {
+  font-size: 27px;
+  margin: 8px 0;
+  font-weight: 750;
+}
+
+.page-header p,
+.filter-section p {
+  color: #64748b;
+  margin: 0;
+  font-size: 14px;
+}
+
+.refresh-btn {
+  border: none;
+  background: #2563eb;
+  color: white;
+  padding: 11px 19px;
+  border-radius: 9px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.refresh-btn:hover {
+  background: #1d4ed8;
+}
+
+.refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.stat-card {
+  background: white;
+  border: 1px solid #e5eaf2;
+  border-radius: 13px;
+  padding: 21px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.04);
+}
+
+.stat-icon {
+  font-size: 27px;
+  background: #eff6ff;
+  padding: 13px;
+  border-radius: 11px;
+}
+
+.stat-card p {
+  color: #64748b;
+  font-size: 13px;
+  margin: 0 0 7px;
+}
+
+.stat-card h3 {
+  font-size: 25px;
+  margin: 0;
+  font-weight: 750;
+}
+
+.filter-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 18px;
+}
+
+.filter-section h3 {
+  margin: 0 0 6px;
+  font-size: 19px;
+}
+
+.filter-section select {
+  padding: 11px 14px;
+  border: 1px solid #dbe2ec;
+  border-radius: 9px;
+  background: white;
+  min-width: 160px;
+  outline: none;
+}
+
+.table-container {
+  background: white;
+  border: 1px solid #e5eaf2;
+  border-radius: 12px;
+  overflow-x: auto;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.04);
+}
+
+table {
+  width: 100%;
+  min-width: 1050px;
+  border-collapse: collapse;
+}
+
+thead {
+  background: #f8fafc;
+}
+
+th {
+  color: #64748b;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-weight: 700;
+  padding: 16px 14px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+td {
+  padding: 16px 14px;
+  border-top: 1px solid #edf0f5;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+tbody tr:hover {
+  background: #f8fafc;
+}
+
+.user-name {
+  font-weight: 650;
+  color: #1e293b;
+}
+
+.role-badge {
+  background: #eef2ff;
+  color: #4338ca;
+  padding: 5px 9px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.status-active {
+  color: #15803d;
+  background: #dcfce7;
+}
+
+.status-stopped {
+  color: #b91c1c;
+  background: #fee2e2;
+}
+
+.map-btn {
+  border: none;
+  background: #eff6ff;
+  color: #2563eb;
+  padding: 8px 11px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.map-btn:hover {
+  background: #dbeafe;
+}
+
+.empty-state {
+  text-align: center;
+  background: white;
+  padding: 55px 20px;
+  border-radius: 13px;
+  border: 1px solid #e5eaf2;
+}
+
+.empty-icon {
+  font-size: 42px;
+  margin-bottom: 12px;
+}
+
+.empty-state h3 {
+  margin: 0 0 9px;
+}
+
+.empty-state p {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.loading-message,
+.error-message {
+  padding: 18px;
+  background: white;
+  border-radius: 10px;
+  margin-bottom: 15px;
+}
+
+.error-message {
+  color: #b91c1c;
+  background: #fee2e2;
+}
+
+.last-refresh {
+  text-align: right;
+  color: #94a3b8;
+  font-size: 12px;
+  margin-top: 15px;
+}
+
+@media (max-width: 768px) {
+  .location-dashboard {
+    padding: 16px;
+  }
+
+  .page-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-section {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .filter-section select {
+    width: 100%;
+  }
+}

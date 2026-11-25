@@ -1,0 +1,103 @@
+
+<div class="announcements-page">
+
+  <div class="page-header">
+    <div>
+      <h2>Announcements</h2>
+      <p>Stay updated with the latest CRM announcements.</p>
+    </div>
+
+    <button class="refresh-btn" (click)="loadAnnouncements()">
+      ↻ Refresh
+    </button>
+  </div>
+
+  <!-- ADMIN CREATE ANNOUNCEMENT -->
+  <div class="create-announcement" *ngIf="isAdmin">
+
+    <h3>Create Announcement</h3>
+
+    <div class="form-group">
+      <label>Announcement Title</label>
+      <input
+        type="text"
+        [(ngModel)]="title"
+        placeholder="Enter announcement title">
+    </div>
+
+    <div class="form-group">
+      <label>Announcement Message</label>
+      <textarea
+        [(ngModel)]="message"
+        rows="4"
+        placeholder="Write your announcement here...">
+      </textarea>
+    </div>
+
+    <button
+      class="publish-btn"
+      (click)="createAnnouncement()"
+      [disabled]="creating || !title.trim() || !message.trim()">
+      {{ creating ? 'Publishing...' : '📢 Publish Announcement' }}
+    </button>
+
+  </div>
+
+  <div *ngIf="successMessage" class="success-message">
+    {{ successMessage }}
+  </div>
+
+  <div *ngIf="loading" class="loading">
+    Loading announcements...
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <!-- ANNOUNCEMENT LIST -->
+  <div *ngIf="!loading && announcements.length === 0" class="empty-state">
+    <div class="empty-icon">📢</div>
+    <h3>No announcements yet</h3>
+    <p>New announcements will appear here.</p>
+  </div>
+
+  <div class="announcement-list" *ngIf="!loading && announcements.length > 0">
+
+    <div
+      class="announcement-card"
+      *ngFor="let announcement of announcements"
+      [class.unread]="!announcement.read">
+
+      <div class="announcement-top">
+        <div class="announcement-title">
+          <span class="announcement-icon">📢</span>
+          <h3>{{ announcement.title }}</h3>
+        </div>
+
+        <span class="status-badge" [class.read]="announcement.read">
+          {{ announcement.read ? 'Read' : 'New' }}
+        </span>
+      </div>
+
+      <p class="announcement-message">
+        {{ announcement.message }}
+      </p>
+
+      <div class="announcement-footer">
+        <span>By {{ announcement.createdByName }}</span>
+        <span>{{ announcement.createdAt | date:'medium' }}</span>
+      </div>
+
+      <button
+        *ngIf="!announcement.read"
+        class="mark-read-btn"
+        (click)="markAsRead(announcement)">
+        Mark as Read
+      </button>
+
+    </div>
+
+  </div>
+
+</div>

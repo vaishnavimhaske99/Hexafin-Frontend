@@ -5,7 +5,7 @@ import { FormsModule, NgForm } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import {
-   LeadService,
+  LeadService,
   CreateLeadRequest,
   LoanProductType
 } from '../../../services/lead.service';
@@ -22,12 +22,10 @@ export class AddLeadComponent {
   @Output() leadCreated = new EventEmitter<void>();
   @Output() cancelled = new EventEmitter<void>();
 
-  // API States
-  isSubmitting: boolean = false;
-  errorMessage: string = '';
-  successMessage: string = '';
+  isSubmitting = false;
+  errorMessage = '';
+  successMessage = '';
 
-  // Exact values from Backend LeadSource enum
   leadSources: string[] = [
     'WEBSITE',
     'REFERRAL',
@@ -37,14 +35,18 @@ export class AddLeadComponent {
     'ADVERTISEMENT',
     'OTHER'
   ];
-  loanProducts: { label: string; value: LoanProductType }[] = [
-  { label: 'Home Loan', value: 'HOME_LOAN' },
-  { label: 'Personal Loan', value: 'PERSONAL_LOAN' },
-  { label: 'Business Loan', value: 'BUSINESS_LOAN' },
-  { label: 'Loan Against Property', value: 'LOAN_AGAINST_PROPERTY' },
-  { label: 'Car Loan', value: 'CAR_LOAN' },
-  { label: 'Loan Against Securities', value: 'LOAN_AGAINST_SECURITIES' }
-];
+
+  loanProducts: {
+    label: string;
+    value: LoanProductType;
+  }[] = [
+    { label: 'Home Loan', value: 'HOME_LOAN' },
+    { label: 'Personal Loan', value: 'PERSONAL_LOAN' },
+    { label: 'Business Loan', value: 'BUSINESS_LOAN' },
+    { label: 'Loan Against Property', value: 'LOAN_AGAINST_PROPERTY' },
+    { label: 'Car Loan', value: 'CAR_LOAN' },
+    { label: 'Loan Against Securities', value: 'LOAN_AGAINST_SECURITIES' }
+  ];
 
   formData: CreateLeadRequest = this.emptyForm();
 
@@ -53,8 +55,12 @@ export class AddLeadComponent {
     private router: Router
   ) {}
 
-  // Empty Lead Form
+  // ==========================================
+  // EMPTY FORM
+  // ==========================================
+
   private emptyForm(): CreateLeadRequest {
+
     return {
       firstName: '',
       lastName: '',
@@ -70,71 +76,138 @@ export class AddLeadComponent {
       pincode: '',
 
       source: null,
-          product: null,
+      product: null,
       description: ''
     };
+
   }
 
-  // CREATE LEAD API
+  // ==========================================
+  // ERROR MESSAGE HANDLER
+  // ==========================================
+
+  private getErrorMessage(error: any): string {
+
+    if (error.status === 0) {
+      return 'Cannot connect to Spring Boot server. Please check backend.';
+    }
+
+    if (error.status === 401) {
+      return 'Session expired. Please login again.';
+    }
+
+    if (error.status === 403) {
+      return 'Access denied. You do not have permission to create leads.';
+    }
+
+    if (error.status === 404) {
+      return 'Create Lead API endpoint not found. Please check backend URL.';
+    }
+
+    if (error.status === 400) {
+
+      return error.error?.message ||
+        error.error?.error ||
+        'Invalid lead data. Please check the entered information.';
+
+    }
+
+    if (error.status === 409) {
+      return error.error?.message ||
+        'A lead with these details may already exist.';
+    }
+
+    return error.error?.message ||
+      error.error?.error ||
+      (typeof error.error === 'string' ? error.error : '') ||
+      `Unable to create lead. HTTP Status: ${error.status}`;
+
+  }
+
+  // ==========================================
+  // CREATE LEAD
+  // ==========================================
+
   submitLead(form: NgForm): void {
 
     if (form.invalid || this.isSubmitting) {
+
       form.control.markAllAsTouched();
       return;
+
     }
 
     this.isSubmitting = true;
     this.errorMessage = '';
     this.successMessage = '';
 
-    this.leadService.createLead(this.formData).subscribe({
+    // Prepare clean request payload.
+    const payload: CreateLeadRequest = {
 
-      next: (response) => {
+      ...this.formData,
 
-        console.log('Lead created successfully:', response);
+      firstName: this.formData.firstName.trim(),
+      lastName: this.formData.lastName?.trim() || '',
+      companyName: this.formData.companyName?.trim() || '',
+      email: this.formData.email?.trim() || '',
+      phone: this.formData.phone?.trim() || '',
+
+      addressLine1: this.formData.addressLine1?.trim() || '',
+      addressLine2: this.formData.addressLine2?.trim() || '',
+      city: this.formData.city?.trim() || '',
+      state: this.formData.state?.trim() || '',
+      country: this.formData.country?.trim() || '',
+      pincode: this.formData.pincode?.trim() || '',
+
+      description: this.formData.description?.trim() || ''
+
+    };
+
+    console.log('Create Lead Request:', payload);
+
+    this.leadService.createLead(payload).subscribe({
+
+      next: response => {
+
+        console.log('Lead Created Successfully:', response);
 
         this.isSubmitting = false;
-
-        // Show success message
         this.successMessage = 'Lead added successfully!';
         this.errorMessage = '';
 
-        // Reset form
+        // Notify parent component.
+        this.leadCreated.emit();
+
+        // Reset form after successful API response.
         this.formData = this.emptyForm();
         form.resetForm(this.formData);
 
-        // Do not redirect immediately.
-        // User can click Back to All Leads.
-
       },
 
-      error: (error) => {
+      error: error => {
 
         this.isSubmitting = false;
-        this.successMessage = '';
 
-        console.error('Create Lead Error:', error);
+        console.error('Create Lead API Error:', error);
 
-        if (error.status === 403) {
-          this.errorMessage =
-            'Access denied. You do not have permission to create leads.';
-        } else if (error.status === 0) {
-          this.errorMessage =
-            'Cannot connect to Spring Boot server.';
-        } else {
-          this.errorMessage =
-            error.error?.message ||
-            'Unable to create lead. Please try again.';
-        }
+        this.errorMessage = this.getErrorMessage(error);
+
       }
 
     });
+
   }
 
-  // Back to All Leads
+  // ==========================================
+  // BACK TO LEADS
+  // ==========================================
+
   cancel(): void {
+
     this.cancelled.emit();
+
     this.router.navigate(['/leads']);
+
   }
 
 }

@@ -19,6 +19,7 @@ export class SidebarComponent {
 
     this.router.navigate(['/login']);
   }
+  
 
   
 }

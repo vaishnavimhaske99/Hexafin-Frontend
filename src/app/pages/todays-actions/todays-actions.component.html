@@ -1,0 +1,97 @@
+
+<div class="todays-actions-container">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div>
+      <h2>⚡ Today's Actions</h2>
+      <p>Monitor all activities performed by your team today.</p>
+    </div>
+
+    <button class="refresh-btn"
+            (click)="refreshActivities()"
+            [disabled]="loading">
+      ↻ Refresh
+    </button>
+  </div>
+
+  <!-- SUMMARY CARD -->
+  <div class="summary-card">
+    <div>
+      <span class="summary-label">Total Activities Today</span>
+      <h2>{{ activities.length }}</h2>
+    </div>
+    <div class="summary-icon">⚡</div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading" *ngIf="loading && activities.length === 0">
+    Loading activities...
+  </div>
+
+  <!-- ERROR -->
+  <div class="error-message" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <!-- EMPTY STATE -->
+  <div class="empty-state"
+       *ngIf="!loading && !errorMessage && activities.length === 0">
+
+    <div class="empty-icon">📋</div>
+    <h3>No Activities Today</h3>
+    <p>Activities performed by users today will appear here.</p>
+
+  </div>
+
+  <!-- ACTIVITIES TABLE -->
+  <div class="activity-table-wrapper"
+       *ngIf="activities.length > 0">
+
+    <table class="activity-table">
+
+      <thead>
+        <tr>
+          <th>Activity</th>
+          <th>User Name</th>
+          <th>Lead Name</th>
+          <th>Description</th>
+          <th>Date & Time</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        <tr *ngFor="let activity of activities">
+
+          <td>
+            <span class="activity-type">
+              {{ getActivityIcon(activity.type) }}
+              {{ activity.type }}
+            </span>
+          </td>
+
+          <td>{{ activity.userName || 'N/A' }}</td>
+
+          <td>{{ activity.leadName || 'N/A' }}</td>
+
+          <td>{{ activity.description || '-' }}</td>
+
+          <td>
+            {{ activity.activityDateTime | date:'dd MMM yyyy, hh:mm a' }}
+          </td>
+
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+  <!-- AUTO REFRESH INFO -->
+  <div class="auto-refresh-note">
+    <span>●</span> Automatically refreshes every 30 seconds
+  </div>
+
+</div>

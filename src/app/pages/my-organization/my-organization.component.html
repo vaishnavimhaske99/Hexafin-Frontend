@@ -38,9 +38,9 @@
     </div>
     
     <div class="unassigned-grid">
-      <!-- ✅ Card वर click इव्हेंट -->
       <div *ngFor="let u of unassignedUsers" 
            class="unassigned-card"
+           [class.inactive-card]="u.status === 'INACTIVE'"
            (click)="openProfile(u.id)"
            style="cursor: pointer;"
            title="Click to view profile">
@@ -48,11 +48,15 @@
         <div class="uc-avatar">{{ u.firstName[0] }}{{ u.lastName ? u.lastName[0] : '' }}</div>
         
         <div class="uc-info">
-          <strong>{{ displayName(u) }}</strong>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <strong>{{ displayName(u) }}</strong>
+            <!-- ✅ Unassigned युजर्ससाठी Inactive बॅज -->
+            <span *ngIf="u.status === 'INACTIVE'" class="status-badge status-inactive">INACTIVE</span>
+          </div>
+          
           <span class="uc-role" [ngClass]="u.role.toLowerCase()">{{ roleLabel(u.role) }}</span>
           <span class="uc-email">{{ u.email }}</span>
           
-          <!-- ✅ Unassigned असल्यास "No Supervisor" दाखवा -->
           <span class="uc-manager unassigned">
             ⚠ No Supervisor
           </span>
@@ -68,39 +72,56 @@
 <!-- ============================================================ -->
 <ng-template #treeTemplate let-nodes>
   <div class="tree-row">
-    <div *ngFor="let node of nodes" class="tree-branch" [class.has-children]="node.children.length > 0">
+    <!-- ✅ जर Inactive असेल तर कार्डला class देऊन फिकट करा -->
+    <div *ngFor="let node of nodes" 
+         class="tree-branch" 
+         [class.has-children]="node.children.length > 0">
       
-      <!-- ✅ USER CARD (Card वर click इव्हेंट) -->
       <div class="org-card user-card" 
+           [class.inactive-card]="node.status === 'INACTIVE'"
            (click)="openProfile(node.id)"
            style="cursor: pointer;"
            title="Click to view profile">
         
-        <!-- Role Badge -->
-        <div class="card-role-badge" [ngClass]="node.role.toLowerCase()">{{ roleLabel(node.role) }}</div>
+        <!-- Top Row: फक्त Role Badge -->
+        <div style="display: flex; justify-content: flex-start; align-items: center; margin-bottom: 8px;">
+          <div class="card-role-badge" [ngClass]="node.role.toLowerCase()">
+            {{ roleLabel(node.role) }}
+          </div>
+        </div>
         
         <div class="card-title">{{ displayName(node) }}</div>
         <div class="card-subtitle">{{ node.email }}</div>
 
-        <!-- ✅ कोणाच्या अंतर्गत आहे (Manager चे नाव) -->
         <div class="card-manager" *ngIf="node.reportsToName">
           👤 {{ node.reportsToName }}
         </div>
         
-        <div class="card-footer">
-          <!-- ⚠️ stopPropagation जेणेकरून Card क्लिक होणार नाही -->
+        <div class="card-footer" style="display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 12px;">
+          
+          <!-- Add Button (फक्त Active असेल तर दिसेल) -->
           <button class="btn-add" 
                   (click)="openAddUnder(node); $event.stopPropagation()" 
-                  *ngIf="canHaveChildren(node)">
+                  *ngIf="canHaveChildren(node) && node.status === 'ACTIVE'">
             <span class="plus">+</span> Add
           </button>
           
+          <!-- Unlink (Trash) Button -->
           <button class="btn-trash" 
                   (click)="unlinkUser(node); $event.stopPropagation()" 
                   title="Remove from supervisor" 
                   *ngIf="node.role !== 'ADMIN' && node.reportsToId !== null">
             🗑
           </button>
+
+          <!-- ✅ एकच Toggle Button (Active असल्यास Deactivate, Inactive असल्यास Activate) -->
+          <button *ngIf="node.role !== 'ADMIN'" 
+                  (click)="toggleUserStatus(node); $event.stopPropagation()" 
+                  [ngClass]="node.status === 'ACTIVE' ? 'btn-deactivate' : 'btn-activate'"
+                  title="{{ node.status === 'ACTIVE' ? 'Deactivate User' : 'Activate User' }}">
+            {{ node.status === 'ACTIVE' ? '🚫 Deactivate' : '✅ Activate' }}
+          </button>
+          
         </div>
       </div>
 
@@ -114,21 +135,21 @@
 </ng-template>
 
 <!-- ============================================================ -->
-<!-- ADD USER MODAL                                               -->
+<!-- ADD USER / TRANSFER MODAL                                    -->
 <!-- ============================================================ -->
 <div *ngIf="showModal" class="modal-backdrop" (click)="closeModal()">
   <div class="modal-box" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>Add User Under {{ modalParentLabel }}</h2>
+      <h2>Assign User Under {{ modalParentLabel }}</h2>
       <button class="btn-close" (click)="closeModal()">✕</button>
     </div>
 
     <div class="modal-body">
-      <label class="field-label">Select User</label>
+      <label class="field-label">Select User (Unassigned Users Only)</label>
       <select class="field-input" [(ngModel)]="modalSelectedUserId" (ngModelChange)="onUserSelected()">
         <option [ngValue]="null">-- Select --</option>
         <option *ngFor="let u of eligibleUsersForModal" [ngValue]="u.id">
-          {{ displayName(u) }} ({{ u.role }})
+          {{ displayName(u) }} ({{ u.role }}) {{ u.status === 'INACTIVE' ? '- [INACTIVE]' : '' }}
         </option>
       </select>
 

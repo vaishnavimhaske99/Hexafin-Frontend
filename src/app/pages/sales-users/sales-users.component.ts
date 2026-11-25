@@ -44,26 +44,26 @@ export class SalesUsersComponent implements OnInit {
     this.loadSalesUsers();
   }
 
-  loadSalesUsers(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
+ 
+loadSalesUsers(): void {
+  this.isLoading = true;
+  this.errorMessage = '';
 
-    this.http.get<SalesUser[]>(this.usersUrl).subscribe({
-      next: (users) => {
-        this.salesUsers = (users || []).filter(
-          user => this.getRoleName(user) === 'SALES'
-        );
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Sales Users API error:', error);
-        this.salesUsers = [];
-        this.errorMessage =
-          'Sales Users load झाले नाहीत. Users API तपासा.';
-        this.isLoading = false;
-      }
-    });
-  }
+  this.http.get<SalesUser[]>(this.usersUrl).subscribe({
+    next: (users) => {
+      // Display ALL users, regardless of role
+      this.salesUsers = users || [];
+      this.isLoading = false;
+    },
+    error: (error) => {
+      console.error('Users API error:', error);
+      this.salesUsers = [];
+      this.errorMessage =
+        'Users load झाले नाहीत. Users API तपासा.';
+      this.isLoading = false;
+    }
+  });
+}
 
   getRoleName(user: SalesUser): string {
     const role = user.role;
@@ -79,9 +79,10 @@ export class SalesUsersComponent implements OnInit {
     return name.toUpperCase();
   }
 
-  openSalesUserDashboard(userId: number): void {
-  this.router.navigate(['/sales-user-dashboard', userId]);
+openSalesUserDashboard(userId: number): void {
+  this.router.navigate(['/users', userId, 'profile']);
 }
+
   get filteredSalesUsers(): SalesUser[] {
     const search = this.searchText.trim().toLowerCase();
 

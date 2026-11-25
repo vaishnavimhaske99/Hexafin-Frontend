@@ -1,131 +1,526 @@
-<!-- LEAD ACTION BUTTONS -->
-<div class="lead-actions">
-  <button type="button" class="add-lead-btn" (click)="openAddLead()">+ Add Lead</button>
-  <button type="button" class="bulk-upload-btn" (click)="openBulkUpload()">Bulk Upload Excel</button>
-  
-  <!-- ✅ नवीन: Assign Mode टॉगल बटण -->
-  <button 
-    type="button" 
-    class="assign-mode-btn" 
-    [class.active]="isSelectionMode"
-    (click)="toggleSelectionMode()">
-    {{ isSelectionMode ? '✕ Cancel Selection' : '☑ Assign Leads' }}
-  </button>
-</div>
 
-<!-- API LOADING & MESSAGES -->
-<div *ngIf="isLoading" class="loading-message">Loading leads...</div>
-<div *ngIf="errorMessage && !isLoading" class="error-message">
-  {{ errorMessage }} <button type="button" (click)="loadLeads()">Retry</button>
-</div>
-<div *ngIf="assignSuccessMessage" class="assign-success">{{ assignSuccessMessage }}</div>
-<div *ngIf="assignErrorMessage" class="error-message">{{ assignErrorMessage }}</div>
+<div class="leads-page">
 
-<!-- SEARCH TOOLBAR -->
-<section class="lead-filters">
-  <div class="search-toolbar">
-    <div class="global-search">
-      <span class="search-icon">⌕</span>
-      <input type="search" [(ngModel)]="searchText" placeholder="Search name, phone, email..." />
-      <button *ngIf="searchText" type="button" class="clear-search" (click)="searchText = ''">×</button>
+  <!-- PAGE HEADER -->
+  <header class="leads-page-header">
+    <div class="page-title">
+      <span class="page-eyebrow">CRM / SALES MANAGEMENT</span>
+      <h2>Enquiry Management</h2>
+      <p>Manage, organize and assign incoming customer enquiries.</p>
     </div>
-    <button type="button" class="filter-toggle-btn" (click)="showFilters = !showFilters">
-      <span class="filter-icon">☷</span> Filters <span class="filter-chevron">{{ showFilters ? '▲' : '▼' }}</span>
-    </button>
-  </div>
-  <div class="filter-results-count">
-    Showing <strong>{{ filteredLeads.length }}</strong> of {{ totalLeads }} leads
-  </div>
-</section>
 
-<!-- ========================================== -->
-<!-- ✅ BULK ACTION BAR (फक्त सिलेक्शन मोडमध्ये) -->
-<!-- ========================================== -->
-<ng-container *ngIf="isSelectionMode">
-  <div class="bulk-action-bar" *ngIf="selectedLeadIds.size > 0">
-    <div class="bulk-info">
-      <span class="selected-count">{{ selectedLeadIds.size }}</span> leads selected
-      <button class="clear-selection" (click)="clearSelection()">✕ Clear</button>
-    </div>
-    
-    <div class="bulk-actions">
-      <select [(ngModel)]="bulkAssignUserId" class="bulk-select">
-        <option [ngValue]="null">Select User to Assign...</option>
-        
-        <!-- 🔥 ADMIN ला MANAGER आणि TEAM_LEAD दिसतील -->
-        <ng-container *ngIf="userRole === 'ADMIN'">
-          <ng-container *ngFor="let user of allUsers">
-            <option *ngIf="user.role === 'MANAGER' || user.role === 'TEAM_LEAD'" [ngValue]="user.id">
-              {{ user.firstName }} {{ user.lastName }} ({{ user.role }})
-            </option>
-          </ng-container>
-        </ng-container>
+    <div class="lead-actions">
+      <button class="btn btn-secondary" (click)="loadLeads()">
+        ↻ Refresh
+      </button>
 
-        <!-- 🔥 TEAM_LEAD ला फक्त SALES दिसतील -->
-        <ng-container *ngIf="userRole === 'TEAM_LEAD'">
-          <ng-container *ngFor="let user of allUsers">
-            <option *ngIf="user.role === 'SALES'" [ngValue]="user.id">
-              {{ user.firstName }} {{ user.lastName }} (Sales)
-            </option>
-          </ng-container>
-        </ng-container>
-      </select>
-      
-      <button class="assign-selected-btn" 
-              [disabled]="!bulkAssignUserId || isBulkAssigning"
-              (click)="bulkAssign()">
-        {{ isBulkAssigning ? 'Assigning...' : 'Assign Selected' }}
+      <button class="btn btn-outline" (click)="openBulkUpload()">
+        ↑ Bulk Enquiry Upload
+      </button>
+
+      <button class="btn btn-primary" (click)="openAddLead()">
+        + Add Enquiry
       </button>
     </div>
-  </div>
-</ng-container>
+  </header>
 
-<!-- FULL DATABASE LEADS TABLE -->
-<div class="table-container">
-  <div class="table-heading">
-    <h3>All Leads - Database Records</h3>
+  <!-- SUCCESS / ERROR MESSAGES -->
+  <div class="alert alert-success" *ngIf="successMessage">
+    {{ successMessage }}
   </div>
 
-  <table class="leads-table">
-    <thead>
-      <tr>
-        <!-- ✅ चेकबॉक्स फक्त सिलेक्शन मोडमध्ये दिसेल -->
-        <th class="checkbox-col" *ngIf="isSelectionMode">
-          <input type="checkbox" [checked]="isAllSelected()" (change)="toggleAll($event)">
-        </th>
-        <th>ID</th>
-        <th>Lead Name</th>
-        <th>Company</th>
-        <th>Email</th>
-        <th>Phone</th>
-        <th>Loan Product</th>
-        <th>Status</th>
-        <th>Assigned To</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let lead of filteredLeads" class="clickable-row" (click)="openLeadProfile(lead.id)">
-        
-        <!-- ✅ Row Checkbox फक्त सिलेक्शन मोडमध्ये दिसेल -->
-        <td class="checkbox-col" *ngIf="isSelectionMode" (click)="$event.stopPropagation()">
-          <input type="checkbox" [checked]="selectedLeadIds.has(lead.id)" (change)="toggleSelection(lead.id)">
-        </td>
+  <div class="alert alert-danger" *ngIf="assignmentError">
+    {{ assignmentError }}
+  </div>
 
-        <td>#{{ lead.id }}</td>
-        <td><strong>{{ lead.firstName }} {{ lead.lastName }}</strong></td>
-        <td>{{ lead.companyName || '-' }}</td>
-        <td>{{ lead.email || '-' }}</td>
-        <td>{{ lead.phone || '-' }}</td>
-        <td>{{ lead.product ? lead.product.replaceAll('_', ' ') : '-' }}</td>
-        <td><span [class]="'status-badge ' + (lead.status || '').toLowerCase()">{{ lead.status || '-' }}</span></td>
-        <td>
-          <span *ngIf="lead.assignedToName" class="assigned-badge">👤 {{ lead.assignedToName }}</span>
-          <span *ngIf="!lead.assignedToName" class="unassigned-badge">Unassigned</span>
-        </td>
-      </tr>
-      <tr *ngIf="!isLoading && !errorMessage && filteredLeads.length === 0">
-        <td [attr.colspan]="isSelectionMode ? 9 : 8" class="empty-message">No leads found.</td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="alert alert-danger" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <!-- ====================================== -->
+  <!-- DASHBOARD HOME VIEW -->
+  <!-- ====================================== -->
+
+<ng-container *ngIf="leadView === 'HOME'">
+
+    <section class="lead-summary-grid">
+
+      <div class="summary-card"
+           (click)="navigateToLeadView('ALL')">
+
+        <div class="summary-icon">📋</div>
+
+        <div class="summary-info">
+          <span>Total Enquiries</span>
+          <h3>{{ allLeadsCount }}</h3>
+          <small>All received enquiries</small>
+        </div>
+
+      </div>
+
+      <div class="summary-card"
+           (click)="navigateToLeadView('ASSIGNED')">
+
+        <div class="summary-icon">👥</div>
+
+        <div class="summary-info">
+          <span>Assigned Enquiries</span>
+          <h3>{{ assignedCount }}</h3>
+          <small>Assigned to team members</small>
+        </div>
+
+      </div>
+
+      <div class="summary-card"
+           (click)="navigateToLeadView('UNASSIGNED')">
+
+        <div class="summary-icon">⏳</div>
+
+        <div class="summary-info">
+          <span>Unassigned Enquiries</span>
+          <h3>{{ unassignedCount }}</h3>
+          <small>Waiting for assignment</small>
+        </div>
+
+      </div>
+
+      <div class="summary-card"
+           (click)="navigateToLeadView('PRODUCTS')">
+
+        <div class="summary-icon">💼</div>
+
+        <div class="summary-info">
+          <span>Product Enquiries</span>
+          <h3>{{ allProductsLeadsCount }}</h3>
+          <small>Enquiries with selected products</small>
+        </div>
+
+      </div>
+
+      <div class="summary-card">
+
+        <div class="summary-icon">📥</div>
+
+        <div class="summary-info">
+          <span>Raw Enquiries</span>
+          <h3>{{ rawLeadsCount }}</h3>
+          <small>Imported enquiries pending validation</small>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- PRODUCT SECTION -->
+    <section class="product-section">
+
+      <div class="section-heading">
+        <div>
+          <h3>Enquiries by Loan Product</h3>
+          <p>Select a product to view its enquiries.</p>
+        </div>
+
+        <button class="btn btn-outline"
+                (click)="navigateToLeadView('PRODUCTS')">
+          View All Products
+        </button>
+      </div>
+
+      <div class="product-grid">
+
+        <div class="product-card"
+             *ngFor="let product of loanProducts"
+             (click)="selectProduct(product.value)">
+
+          <div class="product-card-icon">💰</div>
+
+          <div class="product-card-content">
+            <h4>{{ product.label }}</h4>
+            <span>{{ getProductCount(product.value) }} Enquiries</span>
+          </div>
+
+          <span class="product-arrow">→</span>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- WORKSPACE -->
+    <section class="product-workspace">
+
+      <div class="workspace-toolbar">
+
+        <div>
+          <h3>Enquiry Workspace</h3>
+          <p>Open enquiry lists to manage and assign enquiries.</p>
+        </div>
+
+        <button class="btn btn-primary"
+                (click)="navigateToLeadView('ALL')">
+          View All Enquiries →
+        </button>
+
+      </div>
+
+      <div class="workspace-options">
+
+        <div class="workspace-option"
+             (click)="navigateToLeadView('ALL')">
+          <span class="workspace-option-icon">📋</span>
+          <div>
+            <h4>All Enquiries</h4>
+            <p>View all received enquiries.</p>
+          </div>
+          <span>→</span>
+        </div>
+
+        <div class="workspace-option"
+             (click)="navigateToLeadView('ASSIGNED')">
+          <span class="workspace-option-icon">👥</span>
+          <div>
+            <h4>Assigned Enquiries</h4>
+            <p>View enquiries assigned to users.</p>
+          </div>
+          <span>→</span>
+        </div>
+
+        <div class="workspace-option"
+             (click)="navigateToLeadView('UNASSIGNED')">
+          <span class="workspace-option-icon">⏳</span>
+          <div>
+            <h4>Unassigned Enquiries</h4>
+            <p>View enquiries waiting for assignment.</p>
+          </div>
+          <span>→</span>
+        </div>
+
+      </div>
+
+    </section>
+
+  </ng-container>
+
+  <!-- ====================================== -->
+  <!-- ENQUIRY LIST VIEWS -->
+  <!-- ====================================== -->
+
+ <ng-container *ngIf="leadView !== 'HOME'">
+
+    <!-- LIST HEADER -->
+    <div class="workspace-toolbar">
+
+      <div>
+        <button class="btn btn-outline"
+                (click)="backToProducts()">
+          ← Back to Dashboard
+        </button>
+
+        <h3>
+          {{
+            leadView === 'ASSIGNED'
+              ? 'Assigned Enquiries'
+              : leadView === 'UNASSIGNED'
+                ? 'Unassigned Enquiries'
+                : leadView === 'PRODUCTS'
+                  ? 'Product Enquiries'
+                  : leadView === 'PRODUCT'
+                    ? getProductLabel(selectedProduct)
+                    : 'All Enquiries'
+          }}
+        </h3>
+
+        <p>Search, filter, review and assign enquiries.</p>
+      </div>
+
+      <div class="lead-actions">
+        <button class="btn btn-outline"
+                (click)="loadLeads()">
+          ↻ Refresh
+        </button>
+
+        <button class="btn btn-primary"
+                (click)="openAddLead()">
+          + Add Enquiry
+        </button>
+      </div>
+
+    </div>
+
+    <!-- PRODUCT FILTER CARDS -->
+    <section class="product-section"
+             *ngIf="leadView === 'PRODUCTS'">
+
+      <div class="product-grid">
+
+        <div class="product-card"
+             *ngFor="let product of loanProducts"
+             (click)="selectProduct(product.value)">
+
+          <div class="product-card-icon">💰</div>
+
+          <div class="product-card-content">
+            <h4>{{ product.label }}</h4>
+            <span>{{ getProductCount(product.value) }} Enquiries</span>
+          </div>
+
+          <span class="product-arrow">→</span>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- PRODUCT WORKSPACE BACK -->
+    <div class="workspace-toolbar"
+         *ngIf="leadView === 'PRODUCT'">
+
+      <div>
+        <h3>{{ getProductLabel(selectedProduct) }}</h3>
+        <p>Enquiries received for this loan product.</p>
+      </div>
+
+      <button class="btn btn-outline"
+              (click)="backToProducts()">
+        ← Back to Products
+      </button>
+
+    </div>
+
+    <!-- FILTERS -->
+    <section class="lead-filters">
+
+      <div class="filter-search">
+        <label>Search Enquiries</label>
+
+        <input
+          type="text"
+          [(ngModel)]="searchText"
+          placeholder="Search name, company, email, phone or city..."
+        />
+      </div>
+
+      <div class="filter-item">
+        <label>Enquiry Status</label>
+
+        <select [(ngModel)]="selectedStatus">
+          <option value="ALL">All Statuses</option>
+
+          <option *ngFor="let status of statuses"
+                  [value]="status">
+            {{ status.replace('_', ' ') }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label>Loan Product</label>
+
+        <select [(ngModel)]="selectedProduct">
+          <option value="ALL">All Products</option>
+
+          <option *ngFor="let product of loanProducts"
+                  [ngValue]="product.value">
+            {{ product.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn btn-outline"
+                (click)="clearFilters()">
+          Clear Filters
+        </button>
+      </div>
+
+    </section>
+
+    <!-- SELECTION TOOLBAR -->
+    <section class="bulk-action-bar">
+
+      <div>
+        <button class="btn btn-outline"
+                (click)="toggleSelectionMode()">
+
+          {{ isSelectionMode ? 'Cancel Selection' : 'Select Enquiries' }}
+
+        </button>
+
+        <span *ngIf="isSelectionMode">
+          {{ selectedLeadIds.size }} selected
+        </span>
+      </div>
+
+      <div class="bulk-assignment-controls"
+           *ngIf="isSelectionMode">
+
+        <select [(ngModel)]="bulkAssignUserId">
+          <option [ngValue]="null">
+            Select User to Assign
+          </option>
+
+          <option *ngFor="let user of eligibleUsers"
+                  [ngValue]="user.id">
+            {{ getUserDisplayName(user) }} ({{ user.role }})
+          </option>
+        </select>
+
+        <button class="btn btn-primary"
+                [disabled]="selectedLeadIds.size === 0 ||
+                            !bulkAssignUserId ||
+                            isBulkAssigning"
+                (click)="bulkAssign()">
+
+          {{ isBulkAssigning ? 'Assigning...' : 'Assign Selected' }}
+
+        </button>
+
+      </div>
+
+    </section>
+
+    <!-- LOADING -->
+    <div class="loading-container" *ngIf="isLoading">
+      <p>Loading enquiries...</p>
+    </div>
+
+    <!-- TABLE -->
+    <section class="table-container"
+             *ngIf="!isLoading">
+
+      <table class="leads-table">
+
+        <thead>
+          <tr>
+
+            <th *ngIf="isSelectionMode">
+              <input
+                #allCheckbox
+                type="checkbox"
+                [checked]="isAllSelected()"
+                (change)="toggleAll(allCheckbox.checked)"
+              />
+            </th>
+
+            <th>Enquiry ID</th>
+            <th>Customer Name</th>
+            <th>Company</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>City</th>
+            <th>Product</th>
+            <th>Status</th>
+            <th>Assigned To</th>
+            <th>Import Status</th>
+            <th>Action</th>
+
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <tr *ngFor="let lead of filteredLeads"><tr
+  *ngFor="let lead of filteredLeads"
+  class="clickable-row"
+  (click)="openLeadProfile(lead.id)"
+>
+            <td *ngIf="isSelectionMode">
+
+              <input
+  type="checkbox"
+  [checked]="selectedLeadIds.has(lead.id)"
+  (change)="toggleSelection(
+    lead.id,
+    $any($event.target).checked
+  )"
+/>
+            </td>
+
+            <td>
+              #{{ lead.id }}
+            </td>
+
+         
+
+            <td>
+              {{ lead.companyName || '—' }}
+            </td>
+
+            <td>
+              {{ lead.email || '—' }}
+            </td>
+
+            <td>
+              {{ lead.phone || '—' }}
+            </td>
+
+            <td>
+              {{ lead.city || '—' }}
+            </td>
+
+            <td>
+              {{ lead.product ? getProductLabel(lead.product) : '—' }}
+            </td>
+
+            <td>
+              <span class="status-badge"
+                    [ngClass]="getStatusClass(lead.status)">
+                {{ lead.status || 'NORMAL' }}
+              </span>
+            </td>
+
+            <td>
+              <span *ngIf="lead.assignedToName">
+                {{ lead.assignedToName }}
+              </span>
+
+              <span *ngIf="!lead.assignedToName">
+                Unassigned
+              </span>
+            </td>
+
+            <td>
+              <span class="status-badge"
+                    [ngClass]="getStatusClass(getImportStatus(lead))">
+                {{ getImportStatus(lead) }}
+              </span>
+            </td>
+
+            <td>
+              <button
+  class="btn btn-outline btn-sm"
+  (click)="$event.stopPropagation(); openLeadProfile(lead.id)"
+>
+  View
+</button>
+            </td>
+
+          </tr>
+
+          <!-- EMPTY STATE -->
+          <tr *ngIf="filteredLeads.length === 0">
+
+            <td [attr.colspan]="isSelectionMode ? 12 : 11"
+                class="empty-state">
+
+              <div>
+                <span>📭</span>
+                <h4>No Enquiries Found</h4>
+                <p>No enquiries match your current filters.</p>
+              </div>
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </section>
+
+  </ng-container>
+
 </div>

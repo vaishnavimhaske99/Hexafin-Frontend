@@ -348,3 +348,17 @@ tbody tr:hover {
   color: #1d4ed8;
   text-decoration: underline;
 }
+
+.clickable-row {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.clickable-row:hover {
+  background-color: #f0f5ff;
+}
+
+.sales-user-name {
+  font-weight: 600;
+  color: #2563eb;
+}

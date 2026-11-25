@@ -1,0 +1,88 @@
+
+<div class="location-page">
+
+  <div class="location-header">
+    <div>
+      <h2>Live Location Tracking</h2>
+      <p>Share your current location with your CRM organization.</p>
+    </div>
+
+    <span class="tracking-status"
+          [class.active]="isTracking">
+      {{ isTracking ? 'Tracking Active' : 'Tracking Stopped' }}
+    </span>
+  </div>
+
+  <div class="location-card">
+
+    <div class="location-icon">📍</div>
+
+    <h3>Browser GPS Location</h3>
+
+    <p class="description">
+      Allow browser location permission to share your current location.
+    </p>
+
+    <div class="location-details" *ngIf="latitude !== null">
+
+      <div class="detail-item">
+        <span>Latitude</span>
+        <strong>{{ latitude }}</strong>
+      </div>
+
+      <div class="detail-item">
+        <span>Longitude</span>
+        <strong>{{ longitude }}</strong>
+      </div>
+
+      <div class="detail-item">
+        <span>Accuracy</span>
+        <strong>{{ accuracy | number:'1.0-0' }} meters</strong>
+      </div>
+
+    </div>
+
+    <div class="button-group">
+
+      <button
+        type="button"
+        class="start-button"
+        *ngIf="!isTracking"
+        [disabled]="isLoading"
+        (click)="startTracking()">
+
+        {{ isLoading ? 'Getting Location...' : 'Start Tracking' }}
+
+      </button>
+
+      <button
+        type="button"
+        class="stop-button"
+        *ngIf="isTracking"
+        (click)="stopTracking()">
+
+        Stop Tracking
+
+      </button>
+
+    </div>
+
+    <div class="success-message" *ngIf="message">
+      {{ message }}
+    </div>
+
+    <div class="error-message" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
+  </div>
+
+  <div class="privacy-note">
+    <strong>Privacy Notice</strong>
+    <p>
+      Your location is shared with authorized CRM administrators
+      only while tracking is active. You can stop tracking anytime.
+    </p>
+  </div>
+
+</div>

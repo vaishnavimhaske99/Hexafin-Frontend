@@ -907,3 +907,119 @@ select.edit-input-sm {
     grid-template-columns: 1fr;
   }
 }
+/* ═══════════════ BIRTHDAY HIGHLIGHT ═══════════════ */
+
+/* Sidebar banner */
+.birthday-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0 16px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, #fef3c7, #fde68a, #fbbf24);
+  border: 1px solid #f59e0b;
+  border-radius: 12px;
+  animation: birthdayPulse 2s ease-in-out infinite;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+}
+
+.birthday-icon {
+  font-size: 28px;
+  animation: birthdayBounce 1.5s ease-in-out infinite;
+}
+
+.birthday-banner strong {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #78350f;
+}
+
+.birthday-banner small {
+  display: block;
+  font-size: 11px;
+  color: #92400e;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* DOB field highlight */
+.info-item.birthday-field {
+  background: linear-gradient(135deg, #fef3c7, #fffbeb);
+  border: 1px solid #fbbf24;
+  border-radius: 10px;
+  padding: 12px 14px;
+  position: relative;
+  animation: softGlow 2.5s ease-in-out infinite;
+}
+
+.info-item.birthday-field label {
+  color: #92400e;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.birthday-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 10px;
+  letter-spacing: 0.5px;
+  animation: birthdayPulse 2s ease-in-out infinite;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+}
+
+.info-item.birthday-field p strong {
+  color: #78350f;
+  font-size: 15px;
+}
+
+.age-text {
+  color: #92400e;
+  font-size: 12.5px;
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+/* WhatsApp wish button */
+.birthday-wish-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, #25d366, #128c7e);
+  color: #ffffff;
+  font-size: 12.5px;
+  font-weight: 700;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.35);
+}
+
+.birthday-wish-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(37, 211, 102, 0.5);
+}
+
+/* Animations */
+@keyframes birthdayPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+@keyframes birthdayBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes softGlow {
+  0%, 100% { box-shadow: 0 0 0 rgba(251, 191, 36, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
+}

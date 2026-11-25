@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
-type ProfileTab = 'overview' | 'leads';
+type ProfileTab = 'overview' | 'leads' | 'location';
 
 interface UserProfile {
   id: number;
@@ -15,7 +15,16 @@ interface UserProfile {
   reportsToId?: number | null;
   reportsToName?: string | null;
 }
-
+interface UserLocation {
+  userId: number;
+  userName: string;
+  role: string;
+  latitude: number;
+  longitude: number;
+  accuracy?: number | null;
+  tracking: boolean;
+  recordedAt: string;
+}
 interface Lead {
   id: number;
   firstName?: string;
@@ -48,7 +57,9 @@ export class UserProfileComponent implements OnInit {
   leadsLoading = false;
   errorMessage = '';
   leadsErrorMessage = '';
-
+location: UserLocation | null = null;
+locationLoading = false;
+locationErrorMessage = '';
   profile: UserProfile = {
     id: 0, firstName: '', lastName: '', email: '', mobile: '', role: '', status: ''
   };
@@ -147,7 +158,51 @@ export class UserProfileComponent implements OnInit {
       }
     });
   }
+loadUserLocation(): void {
 
+  if (!this.profile.id) {
+    this.locationErrorMessage = 'User profile not loaded.';
+    return;
+  }
+
+  this.locationLoading = true;
+  this.locationErrorMessage = '';
+  this.location = null;
+
+  const token =
+    localStorage.getItem('crm_token') ||
+    localStorage.getItem('token') ||
+    localStorage.getItem('jwt');
+
+  const headers = new HttpHeaders({
+    Authorization: `Bearer ${token || ''}`
+  });
+
+  this.http.get<UserLocation>(
+    `${this.apiUrl}/locations/user/${this.profile.id}`,
+    { headers }
+  ).subscribe({
+
+    next: (response) => {
+      this.location = response;
+      this.locationLoading = false;
+    },
+
+    error: (err) => {
+      this.locationLoading = false;
+
+      if (err.status === 404) {
+        this.locationErrorMessage = 'Location not found for this user.';
+      } else if (err.status === 403) {
+        this.locationErrorMessage = 'You are not authorized to view this location.';
+      } else {
+        this.locationErrorMessage =
+          err?.error?.message || 'Unable to load user location.';
+      }
+    }
+
+  });
+}
   // ✅ लीड्स लोड करा (नवीन API वापरून)
   loadAssignedLeads(): void {
     if (!this.profile.id) return;

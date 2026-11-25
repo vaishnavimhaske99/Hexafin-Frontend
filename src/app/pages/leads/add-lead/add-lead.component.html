@@ -2,22 +2,61 @@
 <div class="add-lead-container">
 
   <div class="form-header">
-    <h2>Add New Lead</h2>
 
-    <button type="button" (click)="cancel()">
+    <div>
+      <h2>Add New Lead</h2>
+      <p>Enter customer information to create a new CRM lead.</p>
+    </div>
+
+    <button
+      type="button"
+      (click)="cancel()">
       ✕
     </button>
+
   </div>
 
-  <div *ngIf="errorMessage" class="error-message">
+
+  <!-- SUCCESS MESSAGE -->
+
+  <div
+    *ngIf="successMessage"
+    class="success-message">
+
+    <strong>✓ {{ successMessage }}</strong>
+
+    <button
+      type="button"
+      (click)="cancel()">
+
+      Back to All Leads
+
+    </button>
+
+  </div>
+
+
+  <!-- ERROR MESSAGE -->
+
+  <div
+    *ngIf="errorMessage"
+    class="error-message">
+
     {{ errorMessage }}
+
   </div>
 
-  <form #leadForm="ngForm" (ngSubmit)="submitLead(leadForm)">
+
+  <form
+    #leadForm="ngForm"
+    (ngSubmit)="submitLead(leadForm)">
 
     <div class="form-grid">
 
+      <!-- FIRST NAME -->
+
       <div class="form-group">
+
         <label>First Name *</label>
 
         <input
@@ -27,166 +66,243 @@
           #firstName="ngModel"
           required
           pattern=".*\S.*"
-          placeholder="Enter first name"
-        />
+          placeholder="Enter first name" />
 
         <small
           class="validation-error"
           *ngIf="firstName.invalid && firstName.touched">
+
           First name is required.
+
         </small>
+
       </div>
 
+
+      <!-- LAST NAME -->
+
       <div class="form-group">
+
         <label>Last Name</label>
+
         <input
           type="text"
           name="lastName"
           [(ngModel)]="formData.lastName"
-          placeholder="Enter last name"
-        />
+          placeholder="Enter last name" />
+
       </div>
 
+
+      <!-- COMPANY -->
+
       <div class="form-group">
+
         <label>Company Name</label>
+
         <input
           type="text"
           name="companyName"
           [(ngModel)]="formData.companyName"
-        />
+          placeholder="Enter company name" />
+
       </div>
 
+
+      <!-- EMAIL -->
+
       <div class="form-group">
+
         <label>Email</label>
+
         <input
           type="email"
           name="email"
           [(ngModel)]="formData.email"
+          #email="ngModel"
           email
-        />
+          placeholder="Enter email address" />
+
+        <small
+          class="validation-error"
+          *ngIf="email.invalid && email.touched">
+
+          Please enter a valid email address.
+
+        </small>
+
       </div>
 
+
+      <!-- PHONE -->
+
       <div class="form-group">
+
         <label>Phone</label>
+
         <input
           type="tel"
           name="phone"
           [(ngModel)]="formData.phone"
-        />
+          placeholder="Enter phone number" />
+
       </div>
 
-    
-<div class="form-group">
-  <label>Lead Source</label>
 
-  <select
-    name="source"
-    [(ngModel)]="formData.source">
-
-    <option [ngValue]="null">
-      Select Lead Source
-    </option>
-
-    <option
-      *ngFor="let source of leadSources"
-      [value]="source">
-
-      {{ source.replace('_', ' ') }}
-
-    </option>
-
-  </select>
-</div>
-
-
-<!-- LOAN PRODUCT DROPDOWN -->
-<div class="form-group">
-
-  <label for="product">Loan Product *</label>
-
-  <select
-    id="product"
-    name="product"
-    [(ngModel)]="formData.product"
-    #product="ngModel"
-    required>
-
-    <option [ngValue]="null" disabled>
-      Select Loan Product
-    </option>
-
-    <option
-      *ngFor="let item of loanProducts"
-      [ngValue]="item.value">
-
-      {{ item.label }}
-
-    </option>
-
-  </select>
-
-  <small
-    class="validation-error"
-    *ngIf="product.invalid && product.touched">
-
-    Please select a loan product.
-
-  </small>
-
-</div>
-
+      <!-- LEAD SOURCE -->
 
       <div class="form-group">
+
+        <label>Lead Source</label>
+
+        <select
+          name="source"
+          [(ngModel)]="formData.source">
+
+          <option [ngValue]="null">
+            Select Lead Source
+          </option>
+
+          <option
+            *ngFor="let source of leadSources"
+            [ngValue]="source">
+
+            {{ source.replace('_', ' ') }}
+
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <!-- LOAN PRODUCT -->
+
+      <div class="form-group">
+
+        <label>Loan Product *</label>
+
+        <select
+          name="product"
+          [(ngModel)]="formData.product"
+          #product="ngModel"
+          required>
+
+          <option [ngValue]="null" disabled>
+            Select Loan Product
+          </option>
+
+          <option
+            *ngFor="let item of loanProducts"
+            [ngValue]="item.value">
+
+            {{ item.label }}
+
+          </option>
+
+        </select>
+
+        <small
+          class="validation-error"
+          *ngIf="product.invalid && product.touched">
+
+          Please select a loan product.
+
+        </small>
+
+      </div>
+
+
+      <!-- ADDRESS 1 -->
+
+      <div class="form-group">
+
         <label>Address Line 1</label>
+
         <input
+          type="text"
           name="addressLine1"
-          [(ngModel)]="formData.addressLine1"
-        />
+          [(ngModel)]="formData.addressLine1" />
+
       </div>
 
+
+      <!-- ADDRESS 2 -->
+
       <div class="form-group">
+
         <label>Address Line 2</label>
+
         <input
+          type="text"
           name="addressLine2"
-          [(ngModel)]="formData.addressLine2"
-        />
+          [(ngModel)]="formData.addressLine2" />
+
       </div>
 
+
+      <!-- CITY -->
+
       <div class="form-group">
+
         <label>City</label>
+
         <input
+          type="text"
           name="city"
-          [(ngModel)]="formData.city"
-        />
+          [(ngModel)]="formData.city" />
+
       </div>
 
+
+      <!-- STATE -->
+
       <div class="form-group">
+
         <label>State</label>
+
         <input
+          type="text"
           name="state"
-          [(ngModel)]="formData.state"
-        />
+          [(ngModel)]="formData.state" />
+
       </div>
 
+
+      <!-- COUNTRY -->
+
       <div class="form-group">
+
         <label>Country</label>
+
         <input
+          type="text"
           name="country"
-          [(ngModel)]="formData.country"
-        />
+          [(ngModel)]="formData.country" />
+
       </div>
 
+
+      <!-- PINCODE -->
+
       <div class="form-group">
+
         <label>Pincode</label>
+
         <input
+          type="text"
           name="pincode"
-          [(ngModel)]="formData.pincode"
-        />
+          [(ngModel)]="formData.pincode" />
+
       </div>
 
     </div>
 
+
+    <!-- DESCRIPTION -->
+
     <div class="form-group">
+
       <label>Description</label>
 
       <textarea
@@ -195,23 +311,31 @@
         rows="4"
         placeholder="Enter lead description">
       </textarea>
+
     </div>
+
+
+    <!-- FORM ACTIONS -->
 
     <div class="form-actions">
 
       <button
         type="button"
         class="cancel-btn"
+        [disabled]="isSubmitting"
         (click)="cancel()">
+
         Cancel
+
       </button>
+
 
       <button
         type="submit"
         class="save-btn"
         [disabled]="leadForm.invalid || isSubmitting">
 
-        {{ isSubmitting ? 'Saving...' : 'Save Lead' }}
+        {{ isSubmitting ? 'Saving Lead...' : 'Save Lead' }}
 
       </button>
 
@@ -219,24 +343,4 @@
 
   </form>
 
-</div>
-
-<!-- SUCCESS MESSAGE -->
-<div *ngIf="successMessage" class="success-message">
-
-  <strong>✓ {{ successMessage }}</strong>
-
-  <button
-    type="button"
-    (click)="cancel()">
-
-    Back to All Leads
-
-  </button>
-
-</div>
-
-<!-- ERROR MESSAGE -->
-<div *ngIf="errorMessage" class="error-message">
-  {{ errorMessage }}
 </div>

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router'; // ✅ नवीन
+import { Router } from '@angular/router'; 
 import {
   UserService,
   UserResponseDTO,
@@ -47,7 +47,6 @@ export class MyOrganizationComponent implements OnInit {
     SALES: null
   };
 
-  // ✅ Router इंजेक्ट करा
   constructor(
     private userService: UserService,
     private router: Router
@@ -120,9 +119,59 @@ export class MyOrganizationComponent implements OnInit {
     return this.allowedChildren[this.modalParent.role];
   }
 
-  // ✅ नवीन: Profile उघडण्यासाठी
   openProfile(userId: number): void {
     this.router.navigate(['/users', userId, 'profile']);
+  }
+
+  // ===========================
+  // ✅ NEW: TOGGLE STATUS (DEACTIVATE / ACTIVATE)
+  // ===========================
+  toggleUserStatus(user: UserResponseDTO): void {
+    if (user.status === 'ACTIVE') {
+      // Deactivate Logic
+      const reason = prompt(`Are you sure you want to deactivate ${this.displayName(user)}?\n\nPlease enter a reason:`);
+      
+      if (reason === null) return; // Cancel दाबलं तर थांबा
+      if (reason.trim() === '') {
+        alert('Reason is required to deactivate a user!');
+        return;
+      }
+
+      this.loading = true;
+      this.userService.deactivateUser(user.id, reason).subscribe({
+        next: () => {
+          this.loading = false;
+          this.successMessage = `${this.displayName(user)} has been deactivated.`;
+          this.loadUsers();
+          this.clearSuccessLater();
+        },
+        error: (err) => {
+          this.loading = false;
+          // जर युजरच्या खाली लोक असतील तर बॅकएंड एरर देईल
+          this.errorMessage = err?.error?.message || 'Failed to deactivate user.';
+          this.clearSuccessLater();
+        }
+      });
+      
+    } else {
+      // Reactivate Logic
+      if (!confirm(`Reactivate ${this.displayName(user)}? They will be able to login again.`)) return;
+
+      this.loading = true;
+      this.userService.reactivateUser(user.id).subscribe({
+        next: () => {
+          this.loading = false;
+          this.successMessage = `${this.displayName(user)} is now ACTIVE.`;
+          this.loadUsers();
+          this.clearSuccessLater();
+        },
+        error: (err) => {
+          this.loading = false;
+          this.errorMessage = err?.error?.message || 'Failed to reactivate user.';
+          this.clearSuccessLater();
+        }
+      });
+    }
   }
 
   // ===========================

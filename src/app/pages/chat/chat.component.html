@@ -1,0 +1,357 @@
+
+<div class="chat-page">
+
+  <!-- HEADER -->
+  <header class="chat-topbar">
+    <div class="brand-section">
+      <div class="brand-icon">H</div>
+      <div>
+        <h2>Team Chat</h2>
+        <p>Internal CRM Communication</p>
+      </div>
+    </div>
+
+    <div class="topbar-actions">
+      <span class="total-unread" *ngIf="totalUnreadCount > 0">
+        {{ totalUnreadCount }} unread
+      </span>
+
+      <button class="refresh-btn"
+              (click)="loadConversations()"
+              [disabled]="loadingConversations">
+        ↻ Refresh
+      </button>
+    </div>
+  </header>
+
+  <div class="chat-layout">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="chat-sidebar">
+
+      <div class="sidebar-heading">
+        <h3>Messages</h3>
+
+        <button class="new-chat-icon"
+                title="New Chat"
+                (click)="openNewChat()">
+          +
+        </button>
+      </div>
+
+      <!-- SEARCH -->
+      <div class="search-box">
+        <span>⌕</span>
+
+        <input
+          type="text"
+          [(ngModel)]="searchConversation"
+          (input)="filterConversations()"
+          placeholder="Search conversations...">
+      </div>
+
+      <!-- FILTERS -->
+      <div class="chat-filters">
+
+        <button
+          [class.active]="activeFilter === 'ALL'"
+          (click)="setChatFilter('ALL')">
+          All
+        </button>
+
+        <button
+          [class.active]="activeFilter === 'UNREAD'"
+          (click)="setChatFilter('UNREAD')">
+          Unread
+          <span *ngIf="totalUnreadCount > 0">
+            {{ totalUnreadCount }}
+          </span>
+        </button>
+
+      </div>
+
+      <!-- NEW CHAT PANEL -->
+      <div class="new-chat-panel" *ngIf="showNewChat">
+
+        <div class="new-chat-heading">
+          <h4>Start New Chat</h4>
+
+          <button (click)="closeNewChat()">✕</button>
+        </div>
+
+        <input
+          type="text"
+          class="new-chat-search"
+          [(ngModel)]="searchUser"
+          (input)="filterUsers()"
+          placeholder="Search name, email or role">
+
+        <div *ngIf="loadingUsers" class="sidebar-empty">
+          Loading users...
+        </div>
+
+       <div class="new-chat-users" *ngIf="!loadingUsers">
+
+  <button
+    type="button"
+    class="new-chat-user"
+    *ngFor="let user of filteredUsers"
+    (click)="selectNewChatUser(user)">
+
+    <div class="user-avatar">
+      {{ user.firstName?.charAt(0)?.toUpperCase() || 'U' }}
+    </div>
+
+    <div class="user-details">
+      <strong>
+        {{ user.firstName }} {{ user.lastName || '' }}
+      </strong>
+
+      <span>{{ user.role }} · {{ user.email }}</span>
+    </div>
+
+    <span class="chat-user-action">Chat</span>
+
+  </button>
+
+  <div *ngIf="filteredUsers.length === 0" class="sidebar-empty">
+    No active users found.
+  </div>
+
+</div>
+
+      </div>
+
+      <!-- CONVERSATION LIST -->
+      <div class="conversation-list">
+
+        <div *ngIf="loadingConversations"
+             class="sidebar-empty">
+          Loading conversations...
+        </div>
+
+        <div
+          class="conversation-item"
+          *ngFor="let conversation of filteredConversations"
+          [class.selected]="selectedConversation?.id === conversation.id"
+          (click)="openConversation(conversation)">
+
+          <div class="user-avatar conversation-avatar">
+            {{ conversation.participantName.charAt(0).toUpperCase() }}
+          </div>
+
+          <div class="conversation-details">
+
+            <div class="conversation-topline">
+              <strong>{{ conversation.participantName }}</strong>
+
+              <span class="conversation-time"
+                    *ngIf="conversation.lastMessageAt">
+                {{ conversation.lastMessageAt | date:'shortTime' }}
+              </span>
+            </div>
+
+            <div class="conversation-bottomline">
+              <span class="conversation-preview">
+                {{ conversation.lastMessage || 'Start conversation' }}
+              </span>
+
+              <span
+                class="unread-badge"
+                *ngIf="conversation.unreadCount > 0">
+                {{ conversation.unreadCount }}
+              </span>
+            </div>
+
+            <span class="conversation-role">
+              {{ conversation.participantRole }}
+            </span>
+
+          </div>
+
+        </div>
+
+        <div
+          *ngIf="!loadingConversations && filteredConversations.length === 0"
+          class="sidebar-empty">
+
+          {{ activeFilter === 'UNREAD'
+              ? 'No unread conversations.'
+              : 'No conversations found.' }}
+
+        </div>
+
+      </div>
+
+    </aside>
+
+    <!-- RIGHT CHAT WINDOW -->
+    <main class="chat-window">
+
+      <ng-container *ngIf="selectedConversation; else emptyChat">
+
+        <!-- CHAT HEADER -->
+        <div class="chat-window-header">
+
+          <div class="user-avatar header-avatar">
+            {{ selectedConversation.participantName.charAt(0).toUpperCase() }}
+          </div>
+
+          <div class="header-user-details">
+            <h3>{{ selectedConversation.participantName }}</h3>
+
+            <span>
+              {{ selectedConversation.participantRole }}
+            </span>
+          </div>
+
+        </div>
+
+        <!-- MESSAGES -->
+        <div class="messages-area" #messagesArea>
+
+          <!-- OLDER MESSAGES -->
+          <div class="older-messages"
+               *ngIf="hasMoreMessages && messages.length > 0">
+
+            <button
+              (click)="loadOlderMessages()"
+              [disabled]="loadingOlderMessages">
+
+              {{ loadingOlderMessages
+                  ? 'Loading...'
+                  : '↑ Load Older Messages' }}
+
+            </button>
+
+          </div>
+
+          <div *ngIf="loadingMessages" class="messages-status">
+            <span class="loading-dot"></span>
+            Loading messages...
+          </div>
+
+          <!-- DATE SEPARATOR + MESSAGE -->
+          <ng-container
+            *ngFor="let message of messages; let i = index">
+
+            <div class="date-separator"
+                 *ngIf="isFirstMessageOfDay(i)">
+
+              <span>
+                {{ getMessageDateLabel(message.sentAt) }}
+              </span>
+
+            </div>
+
+            <div
+              class="message-row"
+              [class.my-message]="isMyMessage(message)"
+              [class.other-message]="!isMyMessage(message)">
+
+              <div class="message-bubble">
+
+                <div class="message-sender"
+                     *ngIf="!isMyMessage(message)">
+                  {{ message.senderName }}
+                </div>
+
+                <div class="message-content">
+                  {{ message.message }}
+                </div>
+
+                <div class="message-meta">
+
+                  <span>
+                    {{ message.sentAt | date:'shortTime' }}
+                  </span>
+
+                  <span *ngIf="isMyMessage(message)"
+                        class="message-ticks"
+                        [class.read]="message.isRead">
+
+                    {{ message.isRead ? '✓✓' : '✓' }}
+
+                  </span>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </ng-container>
+
+          <div *ngIf="!loadingMessages && messages.length === 0"
+               class="empty-messages">
+
+            <div class="empty-message-icon">💬</div>
+
+            <h3>No messages yet</h3>
+
+            <p>Send a message to start this conversation.</p>
+
+          </div>
+
+        </div>
+
+        <!-- MESSAGE COMPOSER -->
+        <div class="message-composer">
+<textarea
+  [(ngModel)]="newMessage"
+  placeholder="Type a message..."
+  rows="1"
+  [disabled]="sendingMessage"
+  (keydown)="handleMessageKeydown($event)">
+</textarea>
+
+          <button
+            class="send-button"
+            (click)="sendMessage()"
+            [disabled]="sendingMessage || !newMessage.trim()">
+
+            {{ sendingMessage ? '...' : '➤' }}
+
+          </button>
+
+        </div>
+
+        <div class="composer-hint">
+          Press Enter to send · Shift + Enter for new line
+        </div>
+
+      </ng-container>
+
+      <!-- NO CHAT SELECTED -->
+      <ng-template #emptyChat>
+
+        <div class="empty-chat-screen">
+
+          <div class="empty-chat-illustration">✉</div>
+
+          <h2>Welcome to Team Chat</h2>
+
+          <p>
+            Select a conversation from the sidebar
+            or start a new conversation with your team.
+          </p>
+
+          <button (click)="openNewChat()">
+            + Start New Chat
+          </button>
+
+        </div>
+
+      </ng-template>
+
+    </main>
+
+  </div>
+
+  <!-- ERROR -->
+  <div class="chat-error" *ngIf="errorMessage">
+    {{ errorMessage }}
+    <button (click)="errorMessage = ''">✕</button>
+  </div>
+
+</div>

@@ -1,0 +1,160 @@
+
+<div class="location-dashboard">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div>
+      <span class="eyebrow">CRM / USER MONITORING</span>
+      <h2>Live Location Tracking</h2>
+      <p>Monitor location and tracking status of CRM users.</p>
+    </div>
+
+    <button class="refresh-btn"
+            type="button"
+            (click)="loadLocations()"
+            [disabled]="loading">
+      ↻ {{ loading ? 'Refreshing...' : 'Refresh' }}
+    </button>
+  </div>
+
+  <!-- STATISTICS -->
+  <div class="stats-grid">
+
+    <div class="stat-card">
+      <span class="stat-icon">👥</span>
+      <div>
+        <p>Total Users</p>
+        <h3>{{ locations.length }}</h3>
+      </div>
+    </div>
+
+    <div class="stat-card active-card">
+      <span class="stat-icon">🟢</span>
+      <div>
+        <p>Tracking Active</p>
+        <h3>{{ activeCount }}</h3>
+      </div>
+    </div>
+
+    <div class="stat-card stopped-card">
+      <span class="stat-icon">🔴</span>
+      <div>
+        <p>Tracking Stopped</p>
+        <h3>{{ stoppedCount }}</h3>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FILTER -->
+  <div class="filter-section">
+    <div>
+      <h3>User Locations</h3>
+      <p>View latest available location of each user.</p>
+    </div>
+
+    <select [value]="selectedRole" (change)="onRoleChange($event)">
+      <option value="ALL">All Roles</option>
+      <option value="ADMIN">Admin</option>
+      <option value="MANAGER">Manager</option>
+      <option value="TEAM_LEAD">Team Lead</option>
+      <option value="SALES">Sales</option>
+    </select>
+  </div>
+
+  <!-- ERROR -->
+  <div class="error-message" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading-message" *ngIf="loading && locations.length === 0">
+    Loading user locations...
+  </div>
+
+  <!-- EMPTY STATE -->
+  <div class="empty-state"
+       *ngIf="!loading && !errorMessage && filteredLocations.length === 0">
+
+    <div class="empty-icon">📍</div>
+    <h3>No Location Records Found</h3>
+    <p>Users need to start browser location tracking to share their location.</p>
+
+  </div>
+
+  <!-- LOCATION TABLE -->
+  <div class="table-container"
+       *ngIf="filteredLocations.length > 0">
+
+    <table>
+      <thead>
+        <tr>
+          <th>Sr. No.</th>
+          <th>User Name</th>
+          <th>Role</th>
+          <th>Latitude</th>
+          <th>Longitude</th>
+          <th>Accuracy</th>
+          <th>Tracking Status</th>
+          <th>Last Updated</th>
+          <th>Map</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let user of filteredLocations; let i = index">
+
+          <td>{{ i + 1 }}</td>
+
+          <td class="user-name">
+            {{ user.userName }}
+          </td>
+
+          <td>
+            <span class="role-badge">
+              {{ user.role }}
+            </span>
+          </td>
+
+          <td>{{ user.latitude | number:'1.5-6' }}</td>
+
+          <td>{{ user.longitude | number:'1.5-6' }}</td>
+
+          <td>
+            {{ user.accuracy | number:'1.0-0' }} m
+          </td>
+
+          <td>
+            <span class="status-badge"
+                  [class.status-active]="user.tracking"
+                  [class.status-stopped]="!user.tracking">
+
+              {{ user.tracking ? 'Active' : 'Stopped' }}
+
+            </span>
+          </td>
+
+          <td>
+            {{ user.recordedAt | date:'dd MMM yyyy, hh:mm a' }}
+          </td>
+
+          <td>
+            <button
+              type="button"
+              class="map-btn"
+              (click)="openMap(user.latitude, user.longitude)">
+              📍 View Map
+            </button>
+          </td>
+
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+
+  <div class="last-refresh">
+    Auto refresh interval: 30 seconds
+  </div>
+
+</div>

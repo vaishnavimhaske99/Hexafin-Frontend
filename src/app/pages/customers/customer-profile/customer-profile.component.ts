@@ -97,6 +97,64 @@ downloadDoc(docType: string): void {
   this.customerService.downloadDocument(this.customer.id, docType, fileName);
 }
 
+// ═══════════ BIRTHDAY HELPERS ═══════════
+
+// Aaj customer cha birthday aahe ka?
+get isBirthdayToday(): boolean {
+  if (!this.customer?.dateOfBirth) return false;
+
+  try {
+    const dob = new Date(this.customer.dateOfBirth);
+    const today = new Date();
+
+    return (
+      dob.getMonth() === today.getMonth() &&
+      dob.getDate() === today.getDate()
+    );
+  } catch {
+    return false;
+  }
+}
+
+// Customer cha vay (years) — birthday aaj asel tar update
+get customerAge(): number | null {
+  if (!this.customer?.dateOfBirth) return null;
+
+  try {
+    const dob = new Date(this.customer.dateOfBirth);
+    const today = new Date();
+
+    let age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+
+    // Birthday ajun nahi zala asel tar -1
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+      age--;
+    }
+    return age;
+  } catch {
+    return null;
+  }
+}
+
+// Birthday aaj asel tar WhatsApp message link
+get birthdayWhatsAppUrl(): string {
+  if (!this.customer?.phone || !this.isBirthdayToday) return '';
+
+  const phone = this.customer.phone.replace(/\D/g, '');
+  const name = this.customer.firstName || 'Customer';
+  const message = encodeURIComponent(
+    `Dear ${name},\n\n` +
+    `🎂 Happy Birthday! 🎉\n\n` +
+    `Wishing you a wonderful year filled with success and happiness. ` +
+    `Thank you for being a valued customer!\n\n` +
+    `— Team CRM`
+  );
+
+  return `https://wa.me/${phone}?text=${message}`;
+}
+
+
 deleteDoc(docType: string): void {
   if (!this.customer?.id) return;
   if (!confirm('Delete this document?')) return;

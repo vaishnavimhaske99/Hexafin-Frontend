@@ -240,11 +240,30 @@
         <section class="content-card" *ngIf="activeTab === 'kyc'">
           <div class="section-heading"><h2>KYC & Personal Information</h2></div>
           <div class="info-grid">
-            <div class="info-item">
-              <label>Date of Birth</label>
-              <p *ngIf="!editMode">{{ formatDate(customer.dateOfBirth) }}</p>
-              <input *ngIf="editMode" [(ngModel)]="editForm.dateOfBirth" type="date" class="edit-input" />
-            </div>
+          <div class="info-item" [class.birthday-field]="isBirthdayToday && !editMode">
+  <label>
+    Date of Birth
+    <span class="birthday-badge" *ngIf="isBirthdayToday && !editMode">
+      🎂 Birthday Today!
+    </span>
+  </label>
+  <p *ngIf="!editMode">
+    <strong>{{ formatDate(customer.dateOfBirth) }}</strong>
+    <span class="age-text" *ngIf="customerAge !== null">
+      ({{ customerAge }} yrs)
+    </span>
+  </p>
+  <input *ngIf="editMode" [(ngModel)]="editForm.dateOfBirth" type="date" class="edit-input" />
+
+  <!-- 🎁 Quick WhatsApp wish button -->
+  <a *ngIf="isBirthdayToday && !editMode && customer.phone"
+     [href]="birthdayWhatsAppUrl"
+     target="_blank"
+     rel="noopener noreferrer"
+     class="birthday-wish-btn">
+    🎉 Send Birthday Wish
+  </a>
+</div>
             <div class="info-item">
               <label>Gender</label>
               <p *ngIf="!editMode">{{ formatEnum(customer.gender) }}</p>

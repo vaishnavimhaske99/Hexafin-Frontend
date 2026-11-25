@@ -97,6 +97,32 @@ export interface LeadNote {
   updatedAt: string;
 }
 
+export type LeadImportStatus =
+  | 'RAW'
+  | 'VALIDATED'
+  | 'IMPORTED'
+  | 'FAILED';
+
+export interface RawLead extends Lead {
+  raw: boolean;
+  importStatus: LeadImportStatus;
+}
+export interface LeadImportSaveResponse {
+  message: string;
+  totalRows: number;
+  savedCount: number;
+  importStatus: LeadImportStatus;
+  raw: boolean;
+}
+
+export interface LeadImportPreview {
+  headers: string[];
+  autoMappings: { [key: string]: string };
+  unknownColumns: string[];
+  previewRows: { [key: string]: string }[];
+  totalRows: number;
+  warnings: string[];
+}
 export interface LeadNoteRequest {
   content: string;
 }
@@ -180,7 +206,75 @@ getStatusHistory(leadId: number): Observable<any[]> {
     { headers: this.getAuthHeaders() }
   );
 }
+// ==========================================
+// RAW LEAD MANAGEMENT APIs
+// ==========================================
 
+// 1. Get All Raw Leads
+getRawLeads(): Observable<RawLead[]> {
+  return this.http.get<RawLead[]>(
+    `${this.apiUrl}/raw`,
+    { headers: this.getAuthHeaders() }
+  );
+}
+
+// 2. Get Raw Leads By Import Status
+getRawLeadsByStatus(
+  status: LeadImportStatus
+): Observable<RawLead[]> {
+  return this.http.get<RawLead[]>(
+    `${this.apiUrl}/raw/status/${status}`,
+    { headers: this.getAuthHeaders() }
+  );
+}
+
+// 3. Get Raw Leads Count
+getRawLeadsCount(): Observable<number> {
+  return this.http.get<number>(
+    `${this.apiUrl}/raw/count`,
+    { headers: this.getAuthHeaders() }
+  );
+}
+
+// 4. Preview Excel / CSV Before Import
+previewRawLeadImport(file: File): Observable<LeadImportPreview> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const token = localStorage.getItem('token') || '';
+
+  const headers = new HttpHeaders({
+    Authorization: `Bearer ${token}`
+  });
+
+  return this.http.post<LeadImportPreview>(
+    `${this.apiUrl}/import/preview`,
+    formData,
+    { headers }
+  );
+}
+
+// ==========================================
+// SAVE EXCEL / CSV DATA INTO DATABASE
+// ==========================================
+
+saveRawLeadImport(file: File): Observable<LeadImportSaveResponse> {
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const token = localStorage.getItem('token') || '';
+
+  const headers = new HttpHeaders({
+    Authorization: `Bearer ${token}`
+  });
+
+  return this.http.post<LeadImportSaveResponse>(
+    `${this.apiUrl}/import/save-raw`,
+    formData,
+    { headers }
+  );
+}
 
   // =========================================
   // GET — Sales User चे स्वतःचे Leads
