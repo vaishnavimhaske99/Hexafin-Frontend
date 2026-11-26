@@ -421,16 +421,19 @@
 
         <tbody>
 
-          <tr *ngFor="let lead of filteredLeads"><tr
-  *ngFor="let lead of filteredLeads"
-  class="clickable-row"
-  (click)="openLeadProfile(lead.id)"
->
-            <td *ngIf="isSelectionMode">
+<tbody>
 
-              <input
+  <tr
+    *ngFor="let lead of filteredLeads"
+    class="clickable-row"
+    (click)="openLeadProfile(lead.id)"
+  >
+
+            <td *ngIf="isSelectionMode">
+<input
   type="checkbox"
   [checked]="selectedLeadIds.has(lead.id)"
+  (click)="$event.stopPropagation()"
   (change)="toggleSelection(
     lead.id,
     $any($event.target).checked
