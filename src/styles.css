@@ -2,9 +2,7 @@
 /* =========================================================
    HEXAFIN CRM - GLOBAL PROFESSIONAL THEME
    ========================================================= */
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 :root {
   /* Brand Colors */
   --primary: #2563eb;
@@ -123,7 +121,7 @@ img {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+transition: background 0.2s ease, border-color 0.2s ease;
   padding: 24px;
 }
 
@@ -491,4 +489,110 @@ a:hover {
     padding: 9px 13px;
     font-size: 13px;
   }
+}
+
+/* =========================================================
+   HEXAFIN CRM - RESPONSIVE FOUNDATION
+   ========================================================= */
+
+/* Prevent unwanted horizontal scrolling */
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+app-root {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.page-container,
+.page-content,
+.main-content {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Tablet */
+@media screen and (max-width: 1024px) {
+
+  .page-container {
+    padding: 18px;
+  }
+
+  .crm-card,
+  .panel {
+    padding: 18px;
+  }
+
+}
+
+/* Mobile */
+@media screen and (max-width: 768px) {
+
+  .page-container {
+    width: 100%;
+    padding: 14px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .page-header button,
+  .page-header .btn-primary,
+  .page-header .btn-outline {
+    max-width: 100%;
+  }
+
+  .table-container {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .crm-card,
+  .panel {
+    padding: 14px;
+  }
+
+  img {
+    height: auto;
+  }
+
+}
+
+/* Small Mobile */
+@media screen and (max-width: 480px) {
+
+  .page-container {
+    padding: 10px;
+  }
+
+  .page-title {
+    font-size: 19px;
+  }
+
+  .page-subtitle {
+    font-size: 12px;
+  }
+
+  .crm-card,
+  .panel,
+  .stat-card {
+    border-radius: 10px;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
 }
