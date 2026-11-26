@@ -1,5 +1,21 @@
+<!-- MOBILE MENU BUTTON -->
+<button
+  type="button"
+  class="mobile-menu-toggle"
+  (click)="toggleMobileMenu()"
+  aria-label="Toggle menu">
+  ☰
+</button>
 
-<aside class="sidebar">
+<!-- MOBILE OVERLAY -->
+<button
+  type="button"
+  class="mobile-menu-backdrop"
+  [class.visible]="isMobileMenuOpen"
+  (click)="closeMobileMenu()"
+  aria-label="Close menu">
+</button>
+<aside class="sidebar" [class.mobile-open]="isMobileMenuOpen">
 
   <!-- SIDEBAR BRAND -->
   <div class="sidebar-brand">
@@ -23,7 +39,7 @@
   <div class="menu-label">WORKSPACE</div>
 
   <!-- SIDEBAR MENU -->
-  <nav class="sidebar-menu">
+ <nav class="sidebar-menu" (click)="closeMobileMenu()">
 
     <a routerLink="/dashboard"
        routerLinkActive="active"

@@ -9,7 +9,17 @@ import { Router } from '@angular/router';
 })
 export class SidebarComponent {
 
+  isMobileMenuOpen = false;
+
   constructor(private router: Router) {}
+
+  toggleMobileMenu(): void {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+  }
+
+  closeMobileMenu(): void {
+    this.isMobileMenuOpen = false;
+  }
 
   logout(): void {
     localStorage.removeItem('token');
@@ -19,7 +29,4 @@ export class SidebarComponent {
 
     this.router.navigate(['/login']);
   }
-  
-
-  
 }
