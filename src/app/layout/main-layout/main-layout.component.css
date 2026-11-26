@@ -27,3 +27,44 @@ app-header {
   min-width: 0;
   padding: 0;
 }
+
+/* Mobile Responsive Layout */
+
+/* Mobile Responsive Layout */
+@media screen and (max-width: 768px) {
+
+  .crm-layout {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Sidebar should not occupy layout space */
+  app-sidebar {
+    flex: 0 0 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  .main-content {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+  }
+
+  app-header {
+    width: 100%;
+  }
+
+  .page-content {
+    width: 100%;
+    min-width: 0;
+    padding: 10px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+
+}
+
