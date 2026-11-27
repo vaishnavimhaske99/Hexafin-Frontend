@@ -2,12 +2,23 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-
 import {
   LeadService,
   LeadImportPreview,
   LeadImportSaveResponse
 } from '../../../services/lead.service';
+
+interface UploadSheet {
+  id: number;
+  name: string;
+  selectedFile: File | null;
+  isUploading: boolean;
+  isSaving: boolean;
+  errorMessage: string;
+  successMessage: string;
+  previewData: LeadImportPreview | null;
+  importResult: LeadImportSaveResponse | null;
+}
 
 @Component({
   selector: 'app-bulk-upload',
@@ -18,174 +29,172 @@ import {
 })
 export class BulkUploadComponent {
 
-  selectedFile: File | null = null;
-
-  isUploading = false;
-  isSaving = false;
-
-  errorMessage = '';
-  successMessage = '';
-
-  previewData: LeadImportPreview | null = null;
-  importResult: LeadImportSaveResponse | null = null;
+  sheets: UploadSheet[] = [];
+  activeSheetId = 1;
+  private nextSheetId = 2;
 
   constructor(
     private leadService: LeadService,
     private router: Router
-  ) {}
+  ) {
+    this.sheets.push(this.createSheet(1));
+  }
 
-  // FILE SELECTION
+  private createSheet(id: number): UploadSheet {
+    return {
+      id,
+      name: `Sheet ${id}`,
+      selectedFile: null,
+      isUploading: false,
+      isSaving: false,
+      errorMessage: '',
+      successMessage: '',
+      previewData: null,
+      importResult: null
+    };
+  }
+
+  get activeSheet(): UploadSheet {
+    return this.sheets.find(
+      sheet => sheet.id === this.activeSheetId
+    ) || this.sheets[0];
+  }
+
+  addSheet(): void {
+    const id = this.nextSheetId++;
+    this.sheets.push(this.createSheet(id));
+    this.activeSheetId = id;
+  }
+
+  selectSheet(id: number): void {
+    this.activeSheetId = id;
+  }
+
   onFileSelected(event: Event): void {
-
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
+    const sheet = this.activeSheet;
 
-    this.selectedFile = null;
-    this.previewData = null;
-    this.importResult = null;
+    sheet.selectedFile = null;
+    sheet.previewData = null;
+    sheet.importResult = null;
+    sheet.errorMessage = '';
+    sheet.successMessage = '';
 
-    this.errorMessage = '';
-    this.successMessage = '';
-
-    if (!file) {
-      return;
-    }
+    if (!file) return;
 
     const allowedExtensions = ['.xlsx', '.xls', '.csv'];
 
-    const isValidFile = allowedExtensions.some(extension =>
-      file.name.toLowerCase().endsWith(extension)
+    const isValidFile = allowedExtensions.some(
+      extension => file.name.toLowerCase().endsWith(extension)
     );
 
     if (!isValidFile) {
-      this.errorMessage =
+      sheet.errorMessage =
         'Please select a valid Excel (.xlsx, .xls) or CSV file.';
-
       input.value = '';
       return;
     }
 
-    this.selectedFile = file;
+    sheet.selectedFile = file;
+    sheet.name = file.name;
   }
 
-  // STEP 1: PREVIEW SMART IMPORT
   uploadExcel(): void {
-
-    if (!this.selectedFile || this.isUploading || this.isSaving) {
-      return;
-    }
-
-    this.isUploading = true;
-
-    this.errorMessage = '';
-    this.successMessage = '';
-    this.previewData = null;
-    this.importResult = null;
-
-    this.leadService
-      .previewRawLeadImport(this.selectedFile)
-      .subscribe({
-
-        next: (response: LeadImportPreview) => {
-
-          this.isUploading = false;
-
-          this.previewData = response;
-
-          console.log('Smart Lead Preview:', response);
-
-          if (!response || response.totalRows === 0) {
-            this.errorMessage = 'No records found in the uploaded file.';
-            this.previewData = null;
-          }
-
-        },
-
-        error: (error) => {
-
-          this.isUploading = false;
-
-          console.error('Preview Error:', error);
-
-          this.errorMessage =
-            error.error?.message ||
-            'File preview failed. Please check the file and try again.';
-
-        }
-
-      });
-  }
-
-  // STEP 2: SAVE VALID LEADS
-  importLeads(): void {
+    const sheet = this.activeSheet;
 
     if (
-      !this.selectedFile ||
-      !this.previewData ||
-      this.isSaving ||
-      this.isUploading ||
-      this.importResult ||
-      this.previewData.validRows <= 0
-    ) {
-      return;
-    }
+      !sheet.selectedFile ||
+      sheet.isUploading ||
+      sheet.isSaving
+    ) return;
 
-    this.isSaving = true;
-
-    this.errorMessage = '';
-    this.successMessage = '';
+    sheet.isUploading = true;
+    sheet.errorMessage = '';
+    sheet.successMessage = '';
+    sheet.previewData = null;
+    sheet.importResult = null;
 
     this.leadService
-      .saveRawLeadImport(this.selectedFile)
+      .previewRawLeadImport(sheet.selectedFile)
       .subscribe({
+        next: (response: LeadImportPreview) => {
+          sheet.isUploading = false;
+          sheet.previewData = response;
 
-        next: (response: LeadImportSaveResponse) => {
+          console.log(`${sheet.name} Preview:`, response);
 
-          this.isSaving = false;
-
-          this.importResult = response;
-
-          this.successMessage =
-            response.message || 'Lead import completed successfully!';
-
-          console.log('Smart Import Result:', response);
-
+          if (!response || response.totalRows === 0) {
+            sheet.errorMessage =
+              'No records found in the uploaded file.';
+            sheet.previewData = null;
+          }
         },
-
         error: (error) => {
+          sheet.isUploading = false;
+          console.error(`${sheet.name} Preview Error:`, error);
 
-          this.isSaving = false;
-
-          console.error('Database Import Error:', error);
-
-          this.errorMessage =
+          sheet.errorMessage =
             error.error?.message ||
-            'Unable to save leads into database. Please try again.';
-
+            'File preview failed. Please check the file and try again.';
         }
-
       });
   }
 
-  // BACK TO LEADS
+  importLeads(): void {
+    const sheet = this.activeSheet;
+
+    if (
+      !sheet.selectedFile ||
+      !sheet.previewData ||
+      sheet.isSaving ||
+      sheet.isUploading ||
+      sheet.importResult ||
+      sheet.previewData.validRows <= 0
+    ) return;
+
+    sheet.isSaving = true;
+    sheet.errorMessage = '';
+    sheet.successMessage = '';
+
+    this.leadService
+      .saveRawLeadImport(sheet.selectedFile)
+      .subscribe({
+        next: (response: LeadImportSaveResponse) => {
+          sheet.isSaving = false;
+          sheet.importResult = response;
+
+          sheet.successMessage =
+            response.message ||
+            `${sheet.name} import completed successfully!`;
+
+          console.log(`${sheet.name} Import Result:`, response);
+        },
+        error: (error) => {
+          sheet.isSaving = false;
+          console.error(`${sheet.name} Database Import Error:`, error);
+
+          sheet.errorMessage =
+            error.error?.message ||
+            'Unable to save leads into database. Please try again.';
+        }
+      });
+  }
+
+  clearPreview(): void {
+    const sheet = this.activeSheet;
+
+    if (sheet.isSaving || sheet.isUploading) return;
+
+    sheet.selectedFile = null;
+    sheet.previewData = null;
+    sheet.importResult = null;
+    sheet.errorMessage = '';
+    sheet.successMessage = '';
+    sheet.name = `Sheet ${sheet.id}`;
+  }
+
   backToLeads(): void {
     this.router.navigate(['/leads']);
   }
-
-  // CLEAR PREVIEW
-  clearPreview(): void {
-
-    if (this.isSaving || this.isUploading) {
-      return;
-    }
-
-    this.selectedFile = null;
-    this.previewData = null;
-    this.importResult = null;
-
-    this.errorMessage = '';
-    this.successMessage = '';
-
-  }
-
 }
