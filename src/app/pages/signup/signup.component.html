@@ -2,21 +2,22 @@
 <div class="signup-page">
   <div class="signup-container">
 
-    <!-- Left Branding Panel -->
-  
-<div class="brand-header">
+    <!-- LEFT BRANDING PANEL -->
+    <div class="branding-panel">
 
-  <div class="brand-logo">
-    <img src="assets/logo1.jpeg" alt="Hexafin Logo" />
-  </div>
+      <!-- HEXAFIN LOGO -->
+      <div class="brand-header">
+        <div class="brand-logo">
+          <img src="assets/logo1.jpeg" alt="Hexafin Logo" />
+        </div>
 
-  <div class="brand-title">
-    <h1>HEXAFIN</h1>
-    <span>CRM WORKSPACE</span>
-  </div>
+        <div class="brand-title">
+          <h1>HEXAFIN</h1>
+          <span>CRM WORKSPACE</span>
+        </div>
+      </div>
 
-</div>
-
+      <!-- BRAND DESCRIPTION -->
       <div class="brand-description">
         <h2>Grow Your Business</h2>
         <p>
@@ -25,7 +26,9 @@
         </p>
       </div>
 
+      <!-- FEATURES -->
       <div class="feature-list">
+
         <div class="feature-item">
           <span class="feature-icon">♧</span>
           <span>Manage Leads</span>
@@ -45,10 +48,14 @@
           <span class="feature-icon">◇</span>
           <span>Grow Your Business</span>
         </div>
+
       </div>
 
+      <!-- DASHBOARD ILLUSTRATION -->
       <div class="dashboard-illustration">
+
         <div class="dashboard-window">
+
           <div class="window-header">
             <span></span>
             <span></span>
@@ -56,6 +63,7 @@
           </div>
 
           <div class="dashboard-content">
+
             <div class="dashboard-sidebar">
               <div></div>
               <div></div>
@@ -74,41 +82,57 @@
                 <div class="bar bar-four"></div>
               </div>
             </div>
+
           </div>
         </div>
 
-        <div class="floating-card">✓ Customer Growth</div>
+        <div class="floating-card">
+          ✓ Customer Growth
+        </div>
+
       </div>
 
+      <!-- BRANDING FOOTER -->
       <div class="branding-footer">
         Smart CRM. Better Relationships. More Growth.
       </div>
-    </div>
 
-    <!-- Right Signup Form -->
+    </div>
+    <!-- END LEFT BRANDING PANEL -->
+
+
+    <!-- RIGHT SIGNUP FORM PANEL -->
     <div class="form-panel">
 
       <div class="form-heading">
         <h2>Create Your Account</h2>
-        <p>Join CRM Portal and take your business to the next level.</p>
+        <p>
+          Join CRM Portal and take your business to the next level.
+        </p>
       </div>
 
+      <!-- ERROR MESSAGE -->
       <div class="alert alert-danger" *ngIf="errorMessage">
         {{ errorMessage }}
       </div>
 
+      <!-- SUCCESS MESSAGE -->
       <div class="alert alert-success" *ngIf="successMessage">
         {{ successMessage }}
       </div>
 
+      <!-- SIGNUP FORM -->
       <form
         (ngSubmit)="onSignup()"
         #signupForm="ngForm"
         novalidate>
 
+        <!-- FIRST NAME AND LAST NAME -->
         <div class="form-row">
+
           <div class="form-group">
             <label for="firstName">First Name</label>
+
             <input
               id="firstName"
               type="text"
@@ -120,7 +144,8 @@
               required
               maxlength="50">
 
-            <small class="field-error"
+            <small
+              class="field-error"
               *ngIf="firstNameInput.invalid && firstNameInput.touched">
               First name is required.
             </small>
@@ -128,6 +153,7 @@
 
           <div class="form-group">
             <label for="lastName">Last Name</label>
+
             <input
               id="lastName"
               type="text"
@@ -139,17 +165,22 @@
               required
               maxlength="50">
 
-            <small class="field-error"
+            <small
+              class="field-error"
               *ngIf="lastNameInput.invalid && lastNameInput.touched">
               Last name is required.
             </small>
           </div>
+
         </div>
 
+        <!-- EMAIL -->
         <div class="form-group">
           <label for="email">Email Address</label>
+
           <div class="input-with-icon">
             <span class="input-icon">✉</span>
+
             <input
               id="email"
               type="email"
@@ -162,16 +193,20 @@
               email>
           </div>
 
-          <small class="field-error"
+          <small
+            class="field-error"
             *ngIf="emailInput.invalid && emailInput.touched">
             Please enter a valid email address.
           </small>
         </div>
 
+        <!-- MOBILE -->
         <div class="form-group">
           <label for="mobile">Mobile Number</label>
+
           <div class="input-with-icon">
             <span class="input-icon">☎</span>
+
             <input
               id="mobile"
               type="tel"
@@ -185,16 +220,20 @@
               maxlength="10">
           </div>
 
-          <small class="field-error"
+          <small
+            class="field-error"
             *ngIf="mobileInput.invalid && mobileInput.touched">
             Enter a valid 10-digit mobile number.
           </small>
         </div>
 
+        <!-- PASSWORD -->
         <div class="form-group">
           <label for="password">Password</label>
+
           <div class="input-with-icon">
             <span class="input-icon">♙</span>
+
             <input
               id="password"
               type="password"
@@ -207,16 +246,20 @@
               minlength="8">
           </div>
 
-          <small class="field-error"
+          <small
+            class="field-error"
             *ngIf="passwordInput.invalid && passwordInput.touched">
             Password must contain at least 8 characters.
           </small>
         </div>
 
+        <!-- CONFIRM PASSWORD -->
         <div class="form-group">
           <label for="confirmPassword">Confirm Password</label>
+
           <div class="input-with-icon">
             <span class="input-icon">♙</span>
+
             <input
               id="confirmPassword"
               type="password"
@@ -228,13 +271,15 @@
               required>
           </div>
 
-          <small class="field-error"
+          <small
+            class="field-error"
             *ngIf="confirmPasswordInput.touched &&
                    password !== confirmPassword">
             Passwords do not match.
           </small>
         </div>
 
+        <!-- CREATE ACCOUNT BUTTON -->
         <button
           type="submit"
           class="create-account-btn"
@@ -243,25 +288,31 @@
 
           Create Account
           <span class="button-arrow">→</span>
+
         </button>
 
       </form>
 
+      <!-- DIVIDER -->
       <div class="divider">
         <span></span>
         <small>OR</small>
         <span></span>
       </div>
 
+      <!-- LOGIN LINK -->
       <p class="login-text">
         Already have an account?
         <a routerLink="/login">Login</a>
       </p>
 
+      <!-- SECURITY FOOTER -->
       <p class="security-text">
         🔒 Secure access to your CRM workspace
       </p>
 
     </div>
+    <!-- END RIGHT SIGNUP FORM PANEL -->
+
   </div>
 </div>
