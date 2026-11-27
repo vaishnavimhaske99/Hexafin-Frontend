@@ -1,135 +1,175 @@
 
 <div class="login-page">
 
-  <div class="login-card">
+  <div class="login-container">
 
-    <!-- Brand Section -->
-    <div class="brand-section">
-      <div class="brand-icon">C</div>
+    <!-- LEFT BRAND SECTION -->
+    <div class="login-brand-panel">
 
-      <h2>CRM Portal</h2>
+      <div class="brand-content">
 
-      <p>Manage your leads. Grow your business.</p>
+        <div class="brand-logo">
+          <img src="assets/logo1.jpeg" alt="Hexafin Logo" />
+        </div>
+
+        <h1>HEXAFIN</h1>
+
+        <span class="brand-subtitle">CRM WORKSPACE</span>
+
+        <div class="brand-divider"></div>
+
+        <h2>Manage Better.<br />Grow Faster.</h2>
+
+        <p>
+          Your business relationships, leads and sales
+          operations — all in one powerful workspace.
+        </p>
+
+      </div>
+
+      <div class="brand-footer">
+        <span>© 2026 HEXAFIN</span>
+        <span>Smart Business Management</span>
+      </div>
+
     </div>
 
-    <!-- Login Form Section -->
-    <div class="form-section">
+    <!-- RIGHT LOGIN SECTION -->
+    <div class="login-form-panel">
 
-      <h3>Welcome Back!</h3>
+      <div class="form-wrapper">
 
-      <p class="subtitle">
-        Please sign in to your account
-      </p>
+        <div class="mobile-brand">
+          <img src="assets/logo1.jpeg" alt="Hexafin Logo" />
+          <span>HEXAFIN</span>
+        </div>
 
-      <form
-        (ngSubmit)="onLogin()"
-        #loginForm="ngForm"
-        novalidate>
+        <div class="welcome-section">
+          <span class="welcome-tag">WELCOME BACK</span>
 
-        <!-- Email -->
-        <div class="mb-3">
+          <h2>Sign in to your account</h2>
 
-          <label for="email" class="form-label">
-            Email Address
-          </label>
+          <p>
+            Enter your credentials to access your CRM workspace.
+          </p>
+        </div>
 
-          <input
-            type="email"
-            id="email"
-            name="email"
-            class="form-control"
-            placeholder="Enter your email"
-            [(ngModel)]="email"
-            required
-            email
-            autocomplete="email"
-            #emailInput="ngModel"
-            [disabled]="isLoading"
-          />
+        <form
+          (ngSubmit)="onLogin()"
+          #loginForm="ngForm"
+          novalidate>
 
-          <small
-            class="error"
-            *ngIf="emailInput.invalid && emailInput.touched">
+          <!-- EMAIL -->
+          <div class="form-group">
 
-            <span *ngIf="emailInput.errors?.['required']">
-              Email address is required.
+            <label for="email">Email Address</label>
+
+            <div class="input-wrapper">
+              <span class="input-icon">✉</span>
+
+              <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="Enter your email"
+                [(ngModel)]="email"
+                required
+                email
+                autocomplete="email"
+                #emailInput="ngModel"
+                [disabled]="isLoading"
+              />
+            </div>
+
+            <small
+              class="field-error"
+              *ngIf="emailInput.invalid && emailInput.touched">
+
+              <span *ngIf="emailInput.errors?.['required']">
+                Email address is required.
+              </span>
+
+              <span *ngIf="emailInput.errors?.['email']">
+                Please enter a valid email address.
+              </span>
+
+            </small>
+
+          </div>
+
+          <!-- PASSWORD -->
+          <div class="form-group">
+
+            <label for="password">Password</label>
+
+            <div class="input-wrapper">
+              <span class="input-icon">🔒</span>
+
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Enter your password"
+                [(ngModel)]="password"
+                required
+                autocomplete="current-password"
+                #passwordInput="ngModel"
+                [disabled]="isLoading"
+              />
+            </div>
+
+            <small
+              class="field-error"
+              *ngIf="passwordInput.invalid && passwordInput.touched">
+
+              Password is required.
+
+            </small>
+
+          </div>
+
+          <!-- ERROR MESSAGE -->
+          <div
+            class="error-message"
+            role="alert"
+            *ngIf="errorMessage">
+
+            <span>⚠</span>
+            {{ errorMessage }}
+
+          </div>
+
+          <!-- LOGIN BUTTON -->
+          <button
+            type="submit"
+            class="login-btn"
+            [disabled]="loginForm.invalid || isLoading">
+
+            <span>
+              {{ isLoading ? 'Signing in...' : 'Sign In to Workspace' }}
             </span>
 
-            <span *ngIf="emailInput.errors?.['email']">
-              Please enter a valid email address.
-            </span>
+            <span class="btn-arrow" *ngIf="!isLoading">→</span>
 
-          </small>
+          </button>
 
-        </div>
+        </form>
 
-        <!-- Password -->
-        <div class="mb-3">
+        <!-- SIGNUP -->
+        <div class="signup-section">
 
-          <label for="password" class="form-label">
-            Password
-          </label>
+          <span>Don't have an account?</span>
 
-          <input
-            type="password"
-            id="password"
-            name="password"
-            class="form-control"
-            placeholder="Enter your password"
-            [(ngModel)]="password"
-            required
-            autocomplete="current-password"
-            #passwordInput="ngModel"
-            [disabled]="isLoading"
-          />
-
-          <small
-            class="error"
-            *ngIf="passwordInput.invalid && passwordInput.touched">
-
-            Password is required.
-
-          </small>
+          <a routerLink="/signup">Create Account</a>
 
         </div>
 
-        <!-- Backend Error Message -->
-        <div
-          class="error-message"
-          role="alert"
-          *ngIf="errorMessage">
-
-          {{ errorMessage }}
-
+        <div class="security-note">
+          <span>🔐</span>
+          Secure access to your CRM workspace
         </div>
 
-        <!-- Login Button -->
-        <button
-          type="submit"
-          class="btn login-btn w-100"
-          [disabled]="loginForm.invalid || isLoading">
-
-          {{ isLoading ? 'Signing in...' : 'Sign In' }}
-
-        </button>
-
-      </form>
-
-      <!-- Signup Navigation -->
-      <p class="signup-text">
-
-        Don't have an account?
-
-        <a routerLink="/signup">
-          Sign Up
-        </a>
-
-      </p>
-
-      <!-- Footer -->
-      <p class="footer-text">
-        Secure access to your CRM workspace
-      </p>
+      </div>
 
     </div>
 
