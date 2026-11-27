@@ -1,8 +1,8 @@
-
 <div class="leads-page">
 
   <!-- PAGE HEADER -->
   <header class="leads-page-header">
+
     <div class="page-title">
       <span class="page-eyebrow">CRM / SALES MANAGEMENT</span>
       <h2>Enquiry Management</h2>
@@ -10,6 +10,7 @@
     </div>
 
     <div class="lead-actions">
+
       <button class="btn btn-secondary" (click)="loadLeads()">
         ↻ Refresh
       </button>
@@ -21,10 +22,12 @@
       <button class="btn btn-primary" (click)="openAddLead()">
         + Add Enquiry
       </button>
+
     </div>
+
   </header>
 
-  <!-- SUCCESS / ERROR MESSAGES -->
+  <!-- SUCCESS / ERROR -->
   <div class="alert alert-success" *ngIf="successMessage">
     {{ successMessage }}
   </div>
@@ -37,11 +40,8 @@
     {{ errorMessage }}
   </div>
 
-  <!-- ====================================== -->
-  <!-- DASHBOARD HOME VIEW -->
-  <!-- ====================================== -->
-
-<ng-container *ngIf="leadView === 'HOME'">
+  <!-- DASHBOARD HOME -->
+  <ng-container *ngIf="leadView === 'HOME'">
 
     <section class="lead-summary-grid">
 
@@ -115,28 +115,34 @@
     <section class="product-section">
 
       <div class="section-heading">
+
         <div>
           <h3>Enquiries by Loan Product</h3>
           <p>Select a product to view its enquiries.</p>
         </div>
 
-        <button class="btn btn-outline"
-                (click)="navigateToLeadView('PRODUCTS')">
+        <button
+          class="btn btn-outline"
+          (click)="navigateToLeadView('PRODUCTS')">
           View All Products
         </button>
+
       </div>
 
       <div class="product-grid">
 
-        <div class="product-card"
-             *ngFor="let product of loanProducts"
-             (click)="selectProduct(product.value)">
+        <div
+          class="product-card"
+          *ngFor="let product of loanProducts"
+          (click)="selectProduct(product.value)">
 
           <div class="product-card-icon">💰</div>
 
           <div class="product-card-content">
             <h4>{{ product.label }}</h4>
-            <span>{{ getProductCount(product.value) }} Enquiries</span>
+            <span>
+              {{ getProductCount(product.value) }} Enquiries
+            </span>
           </div>
 
           <span class="product-arrow">→</span>
@@ -157,8 +163,9 @@
           <p>Open enquiry lists to manage and assign enquiries.</p>
         </div>
 
-        <button class="btn btn-primary"
-                (click)="navigateToLeadView('ALL')">
+        <button
+          class="btn btn-primary"
+          (click)="navigateToLeadView('ALL')">
           View All Enquiries →
         </button>
 
@@ -166,34 +173,49 @@
 
       <div class="workspace-options">
 
-        <div class="workspace-option"
-             (click)="navigateToLeadView('ALL')">
+        <div
+          class="workspace-option"
+          (click)="navigateToLeadView('ALL')">
+
           <span class="workspace-option-icon">📋</span>
+
           <div>
             <h4>All Enquiries</h4>
             <p>View all received enquiries.</p>
           </div>
+
           <span>→</span>
+
         </div>
 
-        <div class="workspace-option"
-             (click)="navigateToLeadView('ASSIGNED')">
+        <div
+          class="workspace-option"
+          (click)="navigateToLeadView('ASSIGNED')">
+
           <span class="workspace-option-icon">👥</span>
+
           <div>
             <h4>Assigned Enquiries</h4>
             <p>View enquiries assigned to users.</p>
           </div>
+
           <span>→</span>
+
         </div>
 
-        <div class="workspace-option"
-             (click)="navigateToLeadView('UNASSIGNED')">
+        <div
+          class="workspace-option"
+          (click)="navigateToLeadView('UNASSIGNED')">
+
           <span class="workspace-option-icon">⏳</span>
+
           <div>
             <h4>Unassigned Enquiries</h4>
             <p>View enquiries waiting for assignment.</p>
           </div>
+
           <span>→</span>
+
         </div>
 
       </div>
@@ -202,18 +224,17 @@
 
   </ng-container>
 
-  <!-- ====================================== -->
   <!-- ENQUIRY LIST VIEWS -->
-  <!-- ====================================== -->
-
- <ng-container *ngIf="leadView !== 'HOME'">
+  <ng-container *ngIf="leadView !== 'HOME'">
 
     <!-- LIST HEADER -->
     <div class="workspace-toolbar">
 
       <div>
-        <button class="btn btn-outline"
-                (click)="backToProducts()">
+
+        <button
+          class="btn btn-outline"
+          (click)="backToProducts()">
           ← Back to Dashboard
         </button>
 
@@ -232,37 +253,46 @@
         </h3>
 
         <p>Search, filter, review and assign enquiries.</p>
+
       </div>
 
       <div class="lead-actions">
-        <button class="btn btn-outline"
-                (click)="loadLeads()">
+
+        <button
+          class="btn btn-outline"
+          (click)="loadLeads()">
           ↻ Refresh
         </button>
 
-        <button class="btn btn-primary"
-                (click)="openAddLead()">
+        <button
+          class="btn btn-primary"
+          (click)="openAddLead()">
           + Add Enquiry
         </button>
+
       </div>
 
     </div>
 
     <!-- PRODUCT FILTER CARDS -->
-    <section class="product-section"
-             *ngIf="leadView === 'PRODUCTS'">
+    <section
+      class="product-section"
+      *ngIf="leadView === 'PRODUCTS'">
 
       <div class="product-grid">
 
-        <div class="product-card"
-             *ngFor="let product of loanProducts"
-             (click)="selectProduct(product.value)">
+        <div
+          class="product-card"
+          *ngFor="let product of loanProducts"
+          (click)="selectProduct(product.value)">
 
           <div class="product-card-icon">💰</div>
 
           <div class="product-card-content">
             <h4>{{ product.label }}</h4>
-            <span>{{ getProductCount(product.value) }} Enquiries</span>
+            <span>
+              {{ getProductCount(product.value) }} Enquiries
+            </span>
           </div>
 
           <span class="product-arrow">→</span>
@@ -273,17 +303,19 @@
 
     </section>
 
-    <!-- PRODUCT WORKSPACE BACK -->
-    <div class="workspace-toolbar"
-         *ngIf="leadView === 'PRODUCT'">
+    <!-- PRODUCT WORKSPACE -->
+    <div
+      class="workspace-toolbar"
+      *ngIf="leadView === 'PRODUCT'">
 
       <div>
         <h3>{{ getProductLabel(selectedProduct) }}</h3>
         <p>Enquiries received for this loan product.</p>
       </div>
 
-      <button class="btn btn-outline"
-              (click)="backToProducts()">
+      <button
+        class="btn btn-outline"
+        (click)="backToProducts()">
         ← Back to Products
       </button>
 
@@ -293,6 +325,7 @@
     <section class="lead-filters">
 
       <div class="filter-search">
+
         <label>Search Enquiries</label>
 
         <input
@@ -300,39 +333,53 @@
           [(ngModel)]="searchText"
           placeholder="Search name, company, email, phone or city..."
         />
+
       </div>
 
       <div class="filter-item">
+
         <label>Enquiry Status</label>
 
         <select [(ngModel)]="selectedStatus">
+
           <option value="ALL">All Statuses</option>
 
-          <option *ngFor="let status of statuses"
-                  [value]="status">
+          <option
+            *ngFor="let status of statuses"
+            [value]="status">
             {{ status.replace('_', ' ') }}
           </option>
+
         </select>
+
       </div>
 
       <div class="filter-item">
+
         <label>Loan Product</label>
 
         <select [(ngModel)]="selectedProduct">
+
           <option value="ALL">All Products</option>
 
-          <option *ngFor="let product of loanProducts"
-                  [ngValue]="product.value">
+          <option
+            *ngFor="let product of loanProducts"
+            [ngValue]="product.value">
             {{ product.label }}
           </option>
+
         </select>
+
       </div>
 
       <div class="filter-actions">
-        <button class="btn btn-outline"
-                (click)="clearFilters()">
+
+        <button
+          class="btn btn-outline"
+          (click)="clearFilters()">
           Clear Filters
         </button>
+
       </div>
 
     </section>
@@ -341,8 +388,10 @@
     <section class="bulk-action-bar">
 
       <div>
-        <button class="btn btn-outline"
-                (click)="toggleSelectionMode()">
+
+        <button
+          class="btn btn-outline"
+          (click)="toggleSelectionMode()">
 
           {{ isSelectionMode ? 'Cancel Selection' : 'Select Enquiries' }}
 
@@ -351,27 +400,37 @@
         <span *ngIf="isSelectionMode">
           {{ selectedLeadIds.size }} selected
         </span>
+
       </div>
 
-      <div class="bulk-assignment-controls"
-           *ngIf="isSelectionMode">
+      <div
+        class="bulk-assignment-controls"
+        *ngIf="isSelectionMode">
 
         <select [(ngModel)]="bulkAssignUserId">
+
           <option [ngValue]="null">
             Select User to Assign
           </option>
 
-          <option *ngFor="let user of eligibleUsers"
-                  [ngValue]="user.id">
+          <option
+            *ngFor="let user of eligibleUsers"
+            [ngValue]="user.id">
+
             {{ getUserDisplayName(user) }} ({{ user.role }})
+
           </option>
+
         </select>
 
-        <button class="btn btn-primary"
-                [disabled]="selectedLeadIds.size === 0 ||
-                            !bulkAssignUserId ||
-                            isBulkAssigning"
-                (click)="bulkAssign()">
+        <button
+          class="btn btn-primary"
+          [disabled]="
+            selectedLeadIds.size === 0 ||
+            !bulkAssignUserId ||
+            isBulkAssigning
+          "
+          (click)="bulkAssign()">
 
           {{ isBulkAssigning ? 'Assigning...' : 'Assign Selected' }}
 
@@ -382,26 +441,34 @@
     </section>
 
     <!-- LOADING -->
-    <div class="loading-container" *ngIf="isLoading">
+    <div
+      class="loading-container"
+      *ngIf="isLoading">
+
       <p>Loading enquiries...</p>
+
     </div>
 
     <!-- TABLE -->
-    <section class="table-container"
-             *ngIf="!isLoading">
+    <section
+      class="table-container"
+      *ngIf="!isLoading">
 
       <table class="leads-table">
 
         <thead>
+
           <tr>
 
             <th *ngIf="isSelectionMode">
+
               <input
                 #allCheckbox
                 type="checkbox"
                 [checked]="isAllSelected()"
                 (change)="toggleAll(allCheckbox.checked)"
               />
+
             </th>
 
             <th>Enquiry ID</th>
@@ -417,64 +484,82 @@
             <th>Action</th>
 
           </tr>
+
         </thead>
 
         <tbody>
 
-<tbody>
+          <tr
+            *ngFor="let lead of filteredLeads"
+            class="clickable-row"
+            (click)="openLeadProfile(lead.id)">
 
-  <tr
-    *ngFor="let lead of filteredLeads"
-    class="clickable-row"
-    (click)="openLeadProfile(lead.id)"
-  >
-
+            <!-- SELECT CHECKBOX -->
             <td *ngIf="isSelectionMode">
-<input
-  type="checkbox"
-  [checked]="selectedLeadIds.has(lead.id)"
-  (click)="$event.stopPropagation()"
-  (change)="toggleSelection(
-    lead.id,
-    $any($event.target).checked
-  )"
-/>
+
+              <input
+                type="checkbox"
+                [checked]="selectedLeadIds.has(lead.id)"
+                (click)="$event.stopPropagation()"
+                (change)="toggleSelection(
+                  lead.id,
+                  $any($event.target).checked
+                )"
+              />
+
             </td>
 
+            <!-- LEAD ID -->
             <td>
               #{{ lead.id }}
             </td>
 
-         
+            <!-- CUSTOMER NAME -->
+            <td>
+              {{ getCustomerName(lead) }}
+            </td>
 
+            <!-- COMPANY -->
             <td>
               {{ lead.companyName || '—' }}
             </td>
 
+            <!-- EMAIL -->
             <td>
               {{ lead.email || '—' }}
             </td>
 
+            <!-- PHONE -->
             <td>
               {{ lead.phone || '—' }}
             </td>
 
+            <!-- CITY -->
             <td>
               {{ lead.city || '—' }}
             </td>
 
+            <!-- PRODUCT -->
             <td>
               {{ lead.product ? getProductLabel(lead.product) : '—' }}
             </td>
 
+            <!-- STATUS -->
             <td>
-              <span class="status-badge"
-                    [ngClass]="getStatusClass(lead.status)">
+
+              <span
+                class="status-badge"
+                [ngClass]="getStatusClass(lead.status)">
+
                 {{ lead.status || 'NORMAL' }}
+
               </span>
+
             </td>
 
+            <!-- ASSIGNED TO -->
             <td>
+
               <span *ngIf="lead.assignedToName">
                 {{ lead.assignedToName }}
               </span>
@@ -482,22 +567,36 @@
               <span *ngIf="!lead.assignedToName">
                 Unassigned
               </span>
+
             </td>
 
+            <!-- IMPORT STATUS -->
             <td>
-              <span class="status-badge"
-                    [ngClass]="getStatusClass(getImportStatus(lead))">
+
+              <span
+                class="status-badge"
+                [ngClass]="getStatusClass(getImportStatus(lead))">
+
                 {{ getImportStatus(lead) }}
+
               </span>
+
             </td>
 
+            <!-- ACTION -->
             <td>
+
               <button
-  class="btn btn-outline btn-sm"
-  (click)="$event.stopPropagation(); openLeadProfile(lead.id)"
->
-  View
-</button>
+                class="btn btn-outline btn-sm"
+                (click)="
+                  $event.stopPropagation();
+                  openLeadProfile(lead.id)
+                ">
+
+                View
+
+              </button>
+
             </td>
 
           </tr>
@@ -505,8 +604,9 @@
           <!-- EMPTY STATE -->
           <tr *ngIf="filteredLeads.length === 0">
 
-            <td [attr.colspan]="isSelectionMode ? 12 : 11"
-                class="empty-state">
+            <td
+              [attr.colspan]="isSelectionMode ? 12 : 11"
+              class="empty-state">
 
               <div>
                 <span>📭</span>

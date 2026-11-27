@@ -1,6 +1,10 @@
 
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import {
+  HttpClient,
+  HttpHeaders,
+  HttpParams
+} from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export type LoanProductType =
@@ -10,6 +14,10 @@ export type LoanProductType =
   | 'LOAN_AGAINST_PROPERTY'
   | 'CAR_LOAN'
   | 'LOAN_AGAINST_SECURITIES';
+
+// ==========================================
+// LEAD INTERFACE
+// ==========================================
 
 export interface Lead {
   id: number;
@@ -34,6 +42,10 @@ export interface Lead {
   updatedAt: string;
 }
 
+// ==========================================
+// SALES USER INTERFACE
+// ==========================================
+
 export interface SalesUser {
   id: number;
   firstName: string;
@@ -43,6 +55,10 @@ export interface SalesUser {
   status: string;
   assignedLeadCount: number;
 }
+
+// ==========================================
+// CREATE LEAD REQUEST
+// ==========================================
 
 export interface CreateLeadRequest {
   firstName: string;
@@ -61,6 +77,10 @@ export interface CreateLeadRequest {
   description: string;
 }
 
+// ==========================================
+// OLD BULK UPLOAD RESPONSE
+// ==========================================
+
 export interface BulkUploadResponse {
   totalRows: number;
   successCount: number;
@@ -68,6 +88,10 @@ export interface BulkUploadResponse {
   skippedCount: number;
   errors: string[];
 }
+
+// ==========================================
+// LEAD ACTIVITY
+// ==========================================
 
 export interface LeadActivity {
   id: number;
@@ -86,6 +110,10 @@ export interface CreateActivityRequest {
   activityDateTime?: string;
 }
 
+// ==========================================
+// LEAD NOTES
+// ==========================================
+
 export interface LeadNote {
   id: number;
   leadId: number;
@@ -95,6 +123,14 @@ export interface LeadNote {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface LeadNoteRequest {
+  content: string;
+}
+
+// ==========================================
+// RAW LEAD
+// ==========================================
 
 export type LeadImportStatus =
   | 'RAW'
@@ -107,8 +143,13 @@ export interface RawLead extends Lead {
   importStatus: LeadImportStatus;
 }
 
+// ==========================================
+// SMART LEAD IMPORT RESPONSE
+// ==========================================
+
 export interface LeadImportSaveResponse {
   message: string;
+  batchId: number;
   totalRows: number;
   savedCount: number;
   duplicateCount: number;
@@ -116,6 +157,10 @@ export interface LeadImportSaveResponse {
   skippedCount: number;
   errors: string[];
 }
+
+// ==========================================
+// SMART LEAD IMPORT PREVIEW
+// ==========================================
 
 export interface LeadImportPreview {
   headers: string[];
@@ -129,9 +174,35 @@ export interface LeadImportPreview {
   warnings: string[];
 }
 
-export interface LeadNoteRequest {
-  content: string;
+// ==========================================
+// IMPORT BATCH ROW
+// ==========================================
+
+export interface ImportBatchRow {
+  leadId: number;
+  rawData: { [key: string]: any };
+  assignedToId: number | null;
+  assignedToName: string | null;
 }
+
+// ==========================================
+// IMPORT BATCH RESPONSE
+// ==========================================
+
+export interface ImportBatchResponse {
+  batchId: number;
+  fileName: string;
+  headers: string[];
+  rows: ImportBatchRow[];
+  currentPage: number;
+  pageSize: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+// ==========================================
+// LEAD SERVICE
+// ==========================================
 
 @Injectable({
   providedIn: 'root'
@@ -143,8 +214,12 @@ export class LeadService {
 
   constructor(private http: HttpClient) {}
 
+  // ==========================================
   // AUTH HEADERS
+  // ==========================================
+
   private getAuthHeaders(): HttpHeaders {
+
     const token = localStorage.getItem('token') || '';
 
     return new HttpHeaders({
@@ -161,6 +236,7 @@ export class LeadService {
     leadId: number,
     request: CreateActivityRequest
   ): Observable<LeadActivity> {
+
     return this.http.post<LeadActivity>(
       `${this.apiUrl}/${leadId}/activities`,
       request,
@@ -172,6 +248,7 @@ export class LeadService {
     activityId: number,
     request: CreateActivityRequest
   ): Observable<LeadActivity> {
+
     return this.http.put<LeadActivity>(
       `${this.apiUrl}/activities/${activityId}`,
       request,
@@ -180,6 +257,7 @@ export class LeadService {
   }
 
   getLeadsByAssignedTo(userId: number): Observable<Lead[]> {
+
     return this.http.get<Lead[]>(
       `${this.apiUrl}/assigned-to/${userId}`,
       { headers: this.getAuthHeaders() }
@@ -187,6 +265,7 @@ export class LeadService {
   }
 
   getLeadsAssignedToUser(userId: number): Observable<Lead[]> {
+
     return this.http.get<Lead[]>(
       `${this.apiUrl}/assigned-to/${userId}`,
       { headers: this.getAuthHeaders() }
@@ -194,6 +273,7 @@ export class LeadService {
   }
 
   deleteActivity(activityId: number): Observable<void> {
+
     return this.http.delete<void>(
       `${this.apiUrl}/activities/${activityId}`,
       { headers: this.getAuthHeaders() }
@@ -205,6 +285,7 @@ export class LeadService {
   // ==========================================
 
   updateLeadStatus(leadId: number, status: string): Observable<any> {
+
     return this.http.put<any>(
       `${this.apiUrl}/${leadId}/status`,
       { status },
@@ -213,6 +294,7 @@ export class LeadService {
   }
 
   getStatusHistory(leadId: number): Observable<any[]> {
+
     return this.http.get<any[]>(
       `${this.apiUrl}/${leadId}/status-history`,
       { headers: this.getAuthHeaders() }
@@ -224,13 +306,17 @@ export class LeadService {
   // ==========================================
 
   getRawLeads(): Observable<RawLead[]> {
+
     return this.http.get<RawLead[]>(
       `${this.apiUrl}/raw`,
       { headers: this.getAuthHeaders() }
     );
   }
 
-  getRawLeadsByStatus(status: LeadImportStatus): Observable<RawLead[]> {
+  getRawLeadsByStatus(
+    status: LeadImportStatus
+  ): Observable<RawLead[]> {
+
     return this.http.get<RawLead[]>(
       `${this.apiUrl}/raw/status/${status}`,
       { headers: this.getAuthHeaders() }
@@ -238,6 +324,7 @@ export class LeadService {
   }
 
   getRawLeadsCount(): Observable<number> {
+
     return this.http.get<number>(
       `${this.apiUrl}/raw/count`,
       { headers: this.getAuthHeaders() }
@@ -250,6 +337,7 @@ export class LeadService {
 
   // PREVIEW EXCEL / CSV
   previewRawLeadImport(file: File): Observable<LeadImportPreview> {
+
     const formData = new FormData();
     formData.append('file', file);
 
@@ -268,6 +356,7 @@ export class LeadService {
 
   // SAVE IMPORT DATA
   saveRawLeadImport(file: File): Observable<LeadImportSaveResponse> {
+
     const formData = new FormData();
     formData.append('file', file);
 
@@ -285,10 +374,34 @@ export class LeadService {
   }
 
   // ==========================================
+  // GET BATCH-WISE IMPORTED LEADS
+  // ==========================================
+
+  getImportBatchLeads(
+    batchId: number,
+    page: number = 0,
+    size: number = 25
+  ): Observable<ImportBatchResponse> {
+
+    const params = new HttpParams()
+      .set('page', page)
+      .set('size', size);
+
+    return this.http.get<ImportBatchResponse>(
+      `${this.apiUrl}/import-batches/${batchId}/leads`,
+      {
+        headers: this.getAuthHeaders(),
+        params
+      }
+    );
+  }
+
+  // ==========================================
   // LEAD LIST APIs
   // ==========================================
 
   getMyLeads(): Observable<Lead[]> {
+
     return this.http.get<Lead[]>(
       `${this.apiUrl}/my-leads`,
       { headers: this.getAuthHeaders() }
@@ -296,6 +409,7 @@ export class LeadService {
   }
 
   getLeadsBySalesUser(userId: number): Observable<Lead[]> {
+
     return this.http.get<Lead[]>(
       `${this.apiUrl}/sales-user/${userId}`,
       { headers: this.getAuthHeaders() }
@@ -303,6 +417,7 @@ export class LeadService {
   }
 
   getAllLeads(): Observable<Lead[]> {
+
     return this.http.get<Lead[]>(
       this.apiUrl,
       { headers: this.getAuthHeaders() }
@@ -310,6 +425,7 @@ export class LeadService {
   }
 
   getLeadById(id: number): Observable<Lead> {
+
     return this.http.get<Lead>(
       `${this.apiUrl}/${id}`,
       { headers: this.getAuthHeaders() }
@@ -317,6 +433,7 @@ export class LeadService {
   }
 
   getActivitiesByLeadId(leadId: number): Observable<LeadActivity[]> {
+
     return this.http.get<LeadActivity[]>(
       `${this.apiUrl}/${leadId}/activities`,
       { headers: this.getAuthHeaders() }
@@ -328,6 +445,7 @@ export class LeadService {
   // ==========================================
 
   getSalesUsers(): Observable<SalesUser[]> {
+
     return this.http.get<SalesUser[]>(
       `${this.adminUrl}/sales-users`,
       { headers: this.getAuthHeaders() }
@@ -335,6 +453,7 @@ export class LeadService {
   }
 
   getSalesUserLeads(userId: number): Observable<Lead[]> {
+
     return this.http.get<Lead[]>(
       `${this.adminUrl}/sales-users/${userId}/leads`,
       { headers: this.getAuthHeaders() }
@@ -343,9 +462,14 @@ export class LeadService {
 
   // ==========================================
   // LEAD ASSIGNMENT
+  // EXISTING API - KEEP UNCHANGED
   // ==========================================
 
-  assignLead(leadId: number, assignedToId: number): Observable<Lead> {
+  assignLead(
+    leadId: number,
+    assignedToId: number
+  ): Observable<Lead> {
+
     return this.http.put<Lead>(
       `${this.apiUrl}/${leadId}/assign/${assignedToId}`,
       {},
@@ -358,6 +482,7 @@ export class LeadService {
   // ==========================================
 
   createLead(request: CreateLeadRequest): Observable<Lead> {
+
     return this.http.post<Lead>(
       this.apiUrl,
       request,
@@ -370,6 +495,7 @@ export class LeadService {
   // ==========================================
 
   bulkUploadLeads(file: File): Observable<BulkUploadResponse> {
+
     const formData = new FormData();
     formData.append('file', file);
 
@@ -391,13 +517,18 @@ export class LeadService {
   // ==========================================
 
   getNotesByLeadId(leadId: number): Observable<LeadNote[]> {
+
     return this.http.get<LeadNote[]>(
       `${this.apiUrl}/${leadId}/notes`,
       { headers: this.getAuthHeaders() }
     );
   }
 
-  createNote(leadId: number, content: string): Observable<LeadNote> {
+  createNote(
+    leadId: number,
+    content: string
+  ): Observable<LeadNote> {
+
     const body: LeadNoteRequest = { content };
 
     return this.http.post<LeadNote>(
@@ -407,7 +538,11 @@ export class LeadService {
     );
   }
 
-  updateNote(noteId: number, content: string): Observable<LeadNote> {
+  updateNote(
+    noteId: number,
+    content: string
+  ): Observable<LeadNote> {
+
     const body: LeadNoteRequest = { content };
 
     return this.http.put<LeadNote>(
@@ -418,6 +553,7 @@ export class LeadService {
   }
 
   deleteNote(noteId: number): Observable<void> {
+
     return this.http.delete<void>(
       `${this.apiUrl}/notes/${noteId}`,
       { headers: this.getAuthHeaders() }

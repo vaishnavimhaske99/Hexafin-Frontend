@@ -1,11 +1,13 @@
-
 <div class="bulk-upload-container">
 
   <!-- PAGE HEADER -->
   <div class="page-header">
     <h2>Bulk Upload Leads</h2>
 
-    <button type="button" class="back-btn" (click)="backToLeads()">
+    <button
+      type="button"
+      class="back-btn"
+      (click)="backToLeads()">
       ← Back to All Leads
     </button>
   </div>
@@ -14,233 +16,398 @@
   <div class="sheet-tabs">
     <button
       type="button"
-      *ngFor="let sheet of sheets"
-      class="sheet-tab"
-      [class.active]="sheet.id === activeSheetId"
-      (click)="selectSheet(sheet.id)">
-      {{ sheet.name }}
+      *ngFor="let item of sheets; trackBy: trackBySheetId"
+      [class.active]="activeSheetId === item.id"
+      (click)="selectSheet(item.id)">
+      {{ item.name }}
+      <span *ngIf="item.batchId"> ✓</span>
     </button>
 
     <button
       type="button"
       class="add-sheet-btn"
-      (click)="addSheet()">
-      + Add Sheet
+      (click)="createSheet()">
+      + Add New Sheet
     </button>
   </div>
 
-  <!-- UPLOAD CARD -->
-  <div class="upload-card">
+  <ng-container *ngIf="activeSheet as sheet">
 
-    <h3>{{ activeSheet.name }} - Upload Excel / CSV File</h3>
+    <!-- UPLOAD CARD -->
+    <div class="upload-card">
+      <h3>{{ sheet.name }} - Upload Excel / CSV</h3>
 
-    <p>
-      Upload Excel or CSV files with different column formats.
-      Supported formats: XLSX, XLS, CSV.
-    </p>
+      <p>
+        Upload Excel or CSV files with different column headings.
+        Supported formats: XLSX, XLS, CSV.
+      </p>
 
-    <input
-      type="file"
-      accept=".xlsx,.xls,.csv"
-      (change)="onFileSelected($event)"
-    />
+      <input
+        type="file"
+        accept=".xlsx,.xls,.csv"
+        [disabled]="sheet.isUploading || sheet.isSaving"
+        (change)="onFileSelected($event, sheet)"
+      />
 
-    <p *ngIf="activeSheet.selectedFile">
-      Selected File:
-      <strong>{{ activeSheet.selectedFile.name }}</strong>
-    </p>
-
-    <button
-      type="button"
-      class="upload-btn"
-      [disabled]="
-        !activeSheet.selectedFile ||
-        activeSheet.isUploading ||
-        activeSheet.isSaving
-      "
-      (click)="uploadExcel()">
-
-      {{ activeSheet.isUploading ? 'Processing...' : 'Upload & Preview' }}
-
-    </button>
-  </div>
-
-  <!-- ERROR -->
-  <div
-    *ngIf="activeSheet.errorMessage"
-    class="error-message">
-    {{ activeSheet.errorMessage }}
-  </div>
-
-  <!-- SUCCESS -->
-  <div
-    *ngIf="activeSheet.successMessage"
-    class="success-message">
-    {{ activeSheet.successMessage }}
-  </div>
-
-  <!-- PREVIEW -->
-  <div *ngIf="activeSheet.previewData as preview" class="result-card">
-
-    <h3>{{ activeSheet.name }} - Import Preview</h3>
-
-    <!-- PREVIEW SUMMARY -->
-    <div class="result-grid">
-      <p>Total Rows: <strong>{{ preview.totalRows }}</strong></p>
-      <p>Valid Rows: <strong>{{ preview.validRows }}</strong></p>
-      <p>Invalid Rows: <strong>{{ preview.invalidRows }}</strong></p>
-      <p>Duplicate Rows: <strong>{{ preview.duplicateRows }}</strong></p>
-      <p>Total Columns: <strong>{{ preview.headers.length }}</strong></p>
-      <p>Unknown Columns: <strong>{{ preview.unknownColumns.length }}</strong></p>
-    </div>
-
-    <!-- AUTOMATIC COLUMN MAPPING -->
-    <h4>Automatic Column Mapping</h4>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Excel Column</th>
-          <th>CRM Field</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        <tr *ngFor="let mapping of (preview.autoMappings | keyvalue)">
-          <td>{{ mapping.key }}</td>
-          <td>{{ mapping.value }}</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <!-- UNKNOWN COLUMNS -->
-    <div *ngIf="preview.unknownColumns.length > 0">
-
-      <h4>Unknown Columns</h4>
-
-      <ul>
-        <li *ngFor="let column of preview.unknownColumns">
-          {{ column }}
-        </li>
-      </ul>
-
-      <p>Unknown columns will be preserved in rawData.</p>
-
-    </div>
-
-    <!-- WARNINGS -->
-    <div *ngIf="preview.warnings.length > 0">
-
-      <h4>Validation Warnings</h4>
-
-      <ul>
-        <li *ngFor="let warning of preview.warnings">
-          {{ warning }}
-        </li>
-      </ul>
-
-    </div>
-
-    <!-- ORIGINAL EXCEL HEADINGS -->
-    <h4>Original Excel Data - Sample Records (First 10 Rows)</h4>
-
-    <div class="table-container">
-
-      <table>
-        <thead>
-          <tr>
-            <th *ngFor="let header of preview.headers">
-              {{ header }}
-            </th>
-          </tr>
-        </thead>
-
-        <tbody>
-          <tr *ngFor="let row of preview.previewRows">
-            <td *ngFor="let header of preview.headers">
-              {{ row[header] }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-    </div>
-
-    <!-- IMPORT ACTIONS -->
-    <div class="import-actions">
+      <p *ngIf="sheet.selectedFile">
+        Selected File:
+        <strong>{{ sheet.selectedFile.name }}</strong>
+      </p>
 
       <button
         type="button"
         class="upload-btn"
-        [disabled]="
-          activeSheet.isSaving ||
-          activeSheet.isUploading ||
-          !!activeSheet.importResult ||
-          preview.validRows === 0
-        "
-        (click)="importLeads()">
-
-        {{ activeSheet.isSaving
-          ? 'Saving to Database...'
-          : 'Import Valid Leads to Database' }}
-
+        [disabled]="!sheet.selectedFile || sheet.isUploading || sheet.isSaving"
+        (click)="uploadExcel(sheet)">
+        {{ sheet.isUploading ? 'Processing...' : 'Upload & Preview' }}
       </button>
+    </div>
 
+    <!-- ERROR -->
+    <div *ngIf="sheet.errorMessage" class="error-message">
+      {{ sheet.errorMessage }}
+    </div>
+
+    <!-- SUCCESS -->
+    <div *ngIf="sheet.successMessage" class="success-message">
+      {{ sheet.successMessage }}
+    </div>
+
+    <!-- PREVIEW -->
+    <div *ngIf="sheet.previewData && !sheet.batchId" class="result-card">
+
+      <h3>Import Preview - {{ sheet.name }}</h3>
+
+      <div class="result-grid">
+        <p>
+          Total Rows:
+          <strong>{{ sheet.previewData.totalRows }}</strong>
+        </p>
+
+        <p>
+          Valid Rows:
+          <strong>{{ sheet.previewData.validRows }}</strong>
+        </p>
+
+        <p>
+          Invalid Rows:
+          <strong>{{ sheet.previewData.invalidRows }}</strong>
+        </p>
+
+        <p>
+          Duplicate Rows:
+          <strong>{{ sheet.previewData.duplicateRows }}</strong>
+        </p>
+
+        <p>
+          Total Columns:
+          <strong>{{ sheet.previewData.headers.length }}</strong>
+        </p>
+
+        <p>
+          Unknown Columns:
+          <strong>{{ sheet.previewData.unknownColumns.length }}</strong>
+        </p>
+      </div>
+
+      <!-- AUTOMATIC COLUMN MAPPING -->
+      <h4>Automatic Column Mapping</h4>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Excel Column</th>
+              <th>CRM Field</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let mapping of (sheet.previewData.autoMappings | keyvalue)">
+              <td>{{ mapping.key }}</td>
+              <td>{{ mapping.value }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- UNKNOWN COLUMNS -->
+      <div *ngIf="sheet.previewData.unknownColumns.length > 0">
+        <h4>Unknown Columns</h4>
+
+        <ul>
+          <li *ngFor="let column of sheet.previewData.unknownColumns">
+            {{ column }}
+          </li>
+        </ul>
+
+        <p>Unknown columns will be preserved in rawData.</p>
+      </div>
+
+      <!-- WARNINGS -->
+      <div *ngIf="sheet.previewData.warnings.length > 0">
+        <h4>Validation Warnings</h4>
+
+        <ul>
+          <li *ngFor="let warning of sheet.previewData.warnings">
+            {{ warning }}
+          </li>
+        </ul>
+      </div>
+
+      <!-- PREVIEW TABLE -->
+      <h4>Sample Records (First 10 Rows)</h4>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th *ngFor="let header of sheet.previewData.headers">
+                {{ header }}
+              </th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let row of sheet.previewData.previewRows">
+              <td *ngFor="let header of sheet.previewData.headers">
+                {{ row[header] }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- IMPORT ACTIONS -->
+      <div class="import-actions">
+        <button
+          type="button"
+          class="upload-btn"
+          [disabled]="
+            sheet.isSaving ||
+            sheet.isUploading ||
+            sheet.previewData.validRows === 0
+          "
+          (click)="importLeads(sheet)">
+          {{ sheet.isSaving ? 'Saving to Database...' : 'Import Valid Leads to Database' }}
+        </button>
+
+        <button
+          type="button"
+          class="back-btn"
+          [disabled]="sheet.isSaving || sheet.isUploading"
+          (click)="clearPreview(sheet)">
+          Clear Preview
+        </button>
+      </div>
+
+    </div>
+
+    <!-- IMPORT RESULT -->
+    <div *ngIf="sheet.importResult" class="result-card">
+
+      <h3>Database Import Result - {{ sheet.name }}</h3>
+
+      <div class="result-grid">
+        <p>
+          Total Rows:
+          <strong>{{ sheet.importResult.totalRows }}</strong>
+        </p>
+
+        <p>
+          Saved Records:
+          <strong>{{ sheet.importResult.savedCount }}</strong>
+        </p>
+
+        <p>
+          Duplicate Records:
+          <strong>{{ sheet.importResult.duplicateCount }}</strong>
+        </p>
+
+        <p>
+          Failed Records:
+          <strong>{{ sheet.importResult.failedCount }}</strong>
+        </p>
+
+        <p>
+          Skipped Records:
+          <strong>{{ sheet.importResult.skippedCount }}</strong>
+        </p>
+      </div>
+
+      <p *ngIf="sheet.batchId">
+        Batch ID: <strong>{{ sheet.batchId }}</strong>
+      </p>
+
+      <!-- IMPORT ERRORS -->
+      <div *ngIf="(sheet.importResult.errors?.length ?? 0) > 0">
+        <h4>Import Errors</h4>
+
+        <ul>
+          <li *ngFor="let error of sheet.importResult.errors">
+            {{ error }}
+          </li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- SAVED DATABASE RECORDS -->
+    <div *ngIf="sheet.batchId" class="result-card">
+
+      <h3>{{ sheet.name }} - Imported Records</h3>
+
+      <div class="result-grid">
+        <p>
+          Total Records:
+          <strong>{{ sheet.totalElements }}</strong>
+        </p>
+
+        <p>
+          Current Page:
+          <strong>{{ sheet.currentPage + 1 }}</strong>
+        </p>
+
+        <p>
+          Total Pages:
+          <strong>{{ sheet.totalPages }}</strong>
+        </p>
+      </div>
+
+      <p *ngIf="isLoadingUsers">
+        Loading Sales users...
+      </p>
+
+      <p *ngIf="userLoadError" class="error-message">
+        {{ userLoadError }}
+      </p>
+
+      <p *ngIf="sheet.isLoadingRows">
+        Loading imported records...
+      </p>
+
+      <div class="table-container" *ngIf="!sheet.isLoadingRows">
+
+        <table *ngIf="sheet.rows.length > 0">
+
+          <thead>
+            <tr>
+              <th>Lead ID</th>
+
+              <th *ngFor="let header of sheet.headers">
+                {{ header }}
+              </th>
+
+              <th>Assigned To</th>
+              <th>Assign User</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr
+              *ngFor="let row of sheet.rows; trackBy: trackByRowId">
+
+              <td>{{ row.leadId }}</td>
+
+              <td *ngFor="let header of sheet.headers">
+                {{ row.rawData?.[header] ?? '-' }}
+              </td>
+
+              <td>
+                {{ row.assignedToName || 'Not Assigned' }}
+              </td>
+
+              <td>
+                <select
+                  [value]="row.pendingAssignedToId ?? ''"
+                  (change)="row.pendingAssignedToId = $any($event.target).value ? +$any($event.target).value : null"
+                  [disabled]="row.isAssigning || isLoadingUsers">
+
+                  <option value="">Select Sales User</option>
+
+                  <option
+                    *ngFor="let user of users"
+                    [value]="user.id">
+                    {{ user.name }}
+                  </option>
+
+                </select>
+              </td>
+
+              <td>
+                <button
+                  type="button"
+                  class="upload-btn"
+                  [disabled]="
+                    !row.pendingAssignedToId ||
+                    row.isAssigning ||
+                    row.pendingAssignedToId === row.assignedToId
+                  "
+                  (click)="assignRow(sheet, row)">
+
+                  {{ row.isAssigning ? 'Assigning...' : 'Assign' }}
+                </button>
+
+                <p
+                  *ngIf="row.assignMessage"
+                  [class.success-message]="row.assignMessage === 'Assigned successfully'"
+                  [class.error-message]="row.assignMessage !== 'Assigned successfully'">
+                  {{ row.assignMessage }}
+                </p>
+              </td>
+
+            </tr>
+          </tbody>
+
+        </table>
+
+        <p *ngIf="sheet.rows.length === 0">
+          No records found in this sheet.
+        </p>
+
+      </div>
+
+      <!-- PAGINATION -->
+      <div class="import-actions" *ngIf="sheet.totalPages > 0">
+
+        <button
+          type="button"
+          class="back-btn"
+          [disabled]="sheet.currentPage === 0 || sheet.isLoadingRows"
+          (click)="previousPage(sheet)">
+          ← Previous
+        </button>
+
+        <span>
+          Page {{ sheet.currentPage + 1 }} of {{ sheet.totalPages }}
+        </span>
+
+        <button
+          type="button"
+          class="back-btn"
+          [disabled="
+            sheet.currentPage + 1 >= sheet.totalPages ||
+            sheet.isLoadingRows
+          "
+          (click)="nextPage(sheet)">
+          Next →
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- VIEW LEADS -->
+    <div *ngIf="sheet.batchId" class="import-actions">
       <button
         type="button"
-        class="back-btn"
-        [disabled]="activeSheet.isSaving || activeSheet.isUploading"
-        (click)="clearPreview()">
-
-        Clear Preview
-
+        class="upload-btn"
+        (click)="backToLeads()">
+        View All Leads
       </button>
-
     </div>
 
-  </div>
-
-  <!-- IMPORT RESULT -->
-  <div *ngIf="activeSheet.importResult as result" class="result-card">
-
-    <h3>{{ activeSheet.name }} - Database Import Result</h3>
-
-    <div class="result-grid">
-
-      <p>Total Rows: <strong>{{ result.totalRows }}</strong></p>
-
-      <p>Saved Records: <strong>{{ result.savedCount }}</strong></p>
-
-      <p>Duplicate Records: <strong>{{ result.duplicateCount }}</strong></p>
-
-      <p>Failed Records: <strong>{{ result.failedCount }}</strong></p>
-
-      <p>Skipped Records: <strong>{{ result.skippedCount }}</strong></p>
-
-    </div>
-
-    <!-- SAVE ERRORS -->
-    <div *ngIf="(result.errors?.length ?? 0) > 0">
-
-      <h4>Import Errors</h4>
-
-      <ul>
-        <li *ngFor="let error of result.errors">
-          {{ error }}
-        </li>
-      </ul>
-
-    </div>
-
-    <button
-      type="button"
-      class="upload-btn"
-      (click)="backToLeads()">
-
-      View All Leads
-
-    </button>
-
-  </div>
+  </ng-container>
 
 </div>
