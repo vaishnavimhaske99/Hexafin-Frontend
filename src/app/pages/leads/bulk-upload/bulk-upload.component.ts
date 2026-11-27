@@ -27,7 +27,6 @@ export class BulkUploadComponent {
   successMessage = '';
 
   previewData: LeadImportPreview | null = null;
-
   importResult: LeadImportSaveResponse | null = null;
 
   constructor(
@@ -59,7 +58,6 @@ export class BulkUploadComponent {
     );
 
     if (!isValidFile) {
-
       this.errorMessage =
         'Please select a valid Excel (.xlsx, .xls) or CSV file.';
 
@@ -70,10 +68,10 @@ export class BulkUploadComponent {
     this.selectedFile = file;
   }
 
-  // STEP 1: PREVIEW FILE
+  // STEP 1: PREVIEW SMART IMPORT
   uploadExcel(): void {
 
-    if (!this.selectedFile || this.isUploading) {
+    if (!this.selectedFile || this.isUploading || this.isSaving) {
       return;
     }
 
@@ -88,12 +86,18 @@ export class BulkUploadComponent {
       .previewRawLeadImport(this.selectedFile)
       .subscribe({
 
-        next: (response) => {
+        next: (response: LeadImportPreview) => {
 
           this.isUploading = false;
+
           this.previewData = response;
 
-          console.log('Lead Preview:', response);
+          console.log('Smart Lead Preview:', response);
+
+          if (!response || response.totalRows === 0) {
+            this.errorMessage = 'No records found in the uploaded file.';
+            this.previewData = null;
+          }
 
         },
 
@@ -105,21 +109,23 @@ export class BulkUploadComponent {
 
           this.errorMessage =
             error.error?.message ||
-            'File preview failed. Please try again.';
+            'File preview failed. Please check the file and try again.';
 
         }
 
       });
   }
 
-  // STEP 2: SAVE FILE DATA INTO DATABASE
+  // STEP 2: SAVE VALID LEADS
   importLeads(): void {
 
     if (
       !this.selectedFile ||
       !this.previewData ||
       this.isSaving ||
-      this.importResult
+      this.isUploading ||
+      this.importResult ||
+      this.previewData.validRows <= 0
     ) {
       return;
     }
@@ -133,16 +139,16 @@ export class BulkUploadComponent {
       .saveRawLeadImport(this.selectedFile)
       .subscribe({
 
-        next: (response) => {
+        next: (response: LeadImportSaveResponse) => {
 
           this.isSaving = false;
 
           this.importResult = response;
 
           this.successMessage =
-            response.message || 'Leads saved successfully!';
+            response.message || 'Lead import completed successfully!';
 
-          console.log('Database Import Result:', response);
+          console.log('Smart Import Result:', response);
 
         },
 
@@ -154,7 +160,7 @@ export class BulkUploadComponent {
 
           this.errorMessage =
             error.error?.message ||
-            'Unable to save leads into database.';
+            'Unable to save leads into database. Please try again.';
 
         }
 
@@ -169,12 +175,17 @@ export class BulkUploadComponent {
   // CLEAR PREVIEW
   clearPreview(): void {
 
+    if (this.isSaving || this.isUploading) {
+      return;
+    }
+
     this.selectedFile = null;
     this.previewData = null;
     this.importResult = null;
 
     this.errorMessage = '';
     this.successMessage = '';
+
   }
 
 }

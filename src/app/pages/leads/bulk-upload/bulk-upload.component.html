@@ -2,22 +2,15 @@
 <div class="bulk-upload-container">
 
   <div class="page-header">
-
     <h2>Bulk Upload Leads</h2>
 
-    <button
-      type="button"
-      class="back-btn"
-      (click)="backToLeads()">
+    <button type="button" class="back-btn" (click)="backToLeads()">
       ← Back to All Leads
     </button>
-
   </div>
 
-  <!-- Upload Card -->
-
+  <!-- UPLOAD CARD -->
   <div class="upload-card">
-
     <h3>Upload Excel / CSV File</h3>
 
     <p>
@@ -32,69 +25,47 @@
     />
 
     <p *ngIf="selectedFile">
-
-      Selected File:
-      <strong>{{ selectedFile.name }}</strong>
-
+      Selected File: <strong>{{ selectedFile.name }}</strong>
     </p>
-
-    <!-- Preview Button -->
 
     <button
       type="button"
       class="upload-btn"
       [disabled]="!selectedFile || isUploading || isSaving"
       (click)="uploadExcel()">
-
       {{ isUploading ? 'Processing...' : 'Upload & Preview' }}
-
     </button>
-
   </div>
 
   <!-- ERROR -->
-
   <div *ngIf="errorMessage" class="error-message">
     {{ errorMessage }}
   </div>
 
   <!-- SUCCESS -->
-
   <div *ngIf="successMessage" class="success-message">
     {{ successMessage }}
   </div>
 
   <!-- PREVIEW -->
-
   <div *ngIf="previewData" class="result-card">
 
     <h3>Import Preview</h3>
 
+    <!-- PREVIEW SUMMARY -->
     <div class="result-grid">
-
-      <p>
-        Total Rows:
-        <strong>{{ previewData.totalRows }}</strong>
-      </p>
-
-      <p>
-        Total Columns:
-        <strong>{{ previewData.headers.length }}</strong>
-      </p>
-
-      <p>
-        Unknown Columns:
-        <strong>{{ previewData.unknownColumns.length }}</strong>
-      </p>
-
+      <p>Total Rows: <strong>{{ previewData.totalRows }}</strong></p>
+      <p>Valid Rows: <strong>{{ previewData.validRows }}</strong></p>
+      <p>Invalid Rows: <strong>{{ previewData.invalidRows }}</strong></p>
+      <p>Duplicate Rows: <strong>{{ previewData.duplicateRows }}</strong></p>
+      <p>Total Columns: <strong>{{ previewData.headers.length }}</strong></p>
+      <p>Unknown Columns: <strong>{{ previewData.unknownColumns.length }}</strong></p>
     </div>
 
-    <!-- COLUMN MAPPING -->
-
+    <!-- AUTOMATIC COLUMN MAPPING -->
     <h4>Automatic Column Mapping</h4>
 
     <table>
-
       <thead>
         <tr>
           <th>Excel Column</th>
@@ -103,102 +74,68 @@
       </thead>
 
       <tbody>
-
         <tr *ngFor="let mapping of (previewData.autoMappings | keyvalue)">
-
           <td>{{ mapping.key }}</td>
           <td>{{ mapping.value }}</td>
-
         </tr>
-
       </tbody>
-
     </table>
 
     <!-- UNKNOWN COLUMNS -->
-
     <div *ngIf="previewData.unknownColumns.length > 0">
-
       <h4>Unknown Columns</h4>
 
       <ul>
-
         <li *ngFor="let column of previewData.unknownColumns">
           {{ column }}
         </li>
-
       </ul>
 
-      <p>
-        Unknown columns will be preserved in rawData.
-      </p>
-
+      <p>Unknown columns will be preserved in rawData.</p>
     </div>
 
     <!-- WARNINGS -->
-
     <div *ngIf="previewData.warnings.length > 0">
-
-      <h4>Warnings</h4>
+      <h4>Validation Warnings</h4>
 
       <ul>
-
         <li *ngFor="let warning of previewData.warnings">
           {{ warning }}
         </li>
-
       </ul>
-
     </div>
 
-    <!-- PREVIEW ROWS -->
-
+    <!-- PREVIEW TABLE -->
     <h4>Sample Records (First 10 Rows)</h4>
 
     <div class="table-container">
-
       <table>
-
         <thead>
-
           <tr>
             <th *ngFor="let header of previewData.headers">
               {{ header }}
             </th>
           </tr>
-
         </thead>
 
         <tbody>
-
           <tr *ngFor="let row of previewData.previewRows">
-
             <td *ngFor="let header of previewData.headers">
               {{ row[header] }}
             </td>
-
           </tr>
-
         </tbody>
-
       </table>
-
     </div>
 
-    <!-- DATABASE IMPORT BUTTON -->
-
+    <!-- IMPORT ACTIONS -->
     <div class="import-actions">
-
       <button
         type="button"
         class="upload-btn"
-        [disabled]="isSaving || isUploading || !!importResult"
+        [disabled]="isSaving || isUploading || !!importResult || previewData.validRows === 0"
         (click)="importLeads()">
-
-        {{ isSaving
-            ? 'Saving to Database...'
-            : 'Import Leads to Database' }}
-
+        {{ isSaving ? 'Saving to Database...' : 'Import Valid Leads to Database' }}
       </button>
 
       <button
@@ -206,47 +143,38 @@
         class="back-btn"
         [disabled]="isSaving"
         (click)="clearPreview()">
-
         Clear Preview
-
       </button>
-
     </div>
 
   </div>
 
   <!-- IMPORT RESULT -->
-
   <div *ngIf="importResult" class="result-card">
 
     <h3>Database Import Result</h3>
 
     <div class="result-grid">
-
-      <p>
-        Total Rows:
-        <strong>{{ importResult.totalRows }}</strong>
-      </p>
-
-      <p>
-        Saved Records:
-        <strong>{{ importResult.savedCount }}</strong>
-      </p>
-
-      <p>
-        Import Status:
-        <strong>{{ importResult.importStatus }}</strong>
-      </p>
-
+      <p>Total Rows: <strong>{{ importResult.totalRows }}</strong></p>
+      <p>Saved Records: <strong>{{ importResult.savedCount }}</strong></p>
+      <p>Duplicate Records: <strong>{{ importResult.duplicateCount }}</strong></p>
+      <p>Failed Records: <strong>{{ importResult.failedCount }}</strong></p>
+      <p>Skipped Records: <strong>{{ importResult.skippedCount }}</strong></p>
     </div>
 
-    <button
-      type="button"
-      class="upload-btn"
-      (click)="backToLeads()">
+    <!-- SAVE ERRORS -->
+   <div *ngIf="(importResult.errors?.length ?? 0) > 0">
+      <h4>Import Errors</h4>
 
+      <ul>
+        <li *ngFor="let error of importResult.errors">
+          {{ error }}
+        </li>
+      </ul>
+    </div>
+
+    <button type="button" class="upload-btn" (click)="backToLeads()">
       View All Leads
-
     </button>
 
   </div>

@@ -1,3 +1,4 @@
+
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -79,14 +80,12 @@ export interface LeadActivity {
   description: string;
 }
 
-// ✅ Activity Request साठी interface
 export interface CreateActivityRequest {
   type: 'CALL' | 'WHATSAPP' | 'EMAIL' | 'TEXT' | 'MEETING' | 'OTHER';
   description: string;
-  activityDateTime?: string; // Optional
+  activityDateTime?: string;
 }
 
-// ✅ NOTES INTERFACES (नवीन)
 export interface LeadNote {
   id: number;
   leadId: number;
@@ -107,12 +106,15 @@ export interface RawLead extends Lead {
   raw: boolean;
   importStatus: LeadImportStatus;
 }
+
 export interface LeadImportSaveResponse {
   message: string;
   totalRows: number;
   savedCount: number;
-  importStatus: LeadImportStatus;
-  raw: boolean;
+  duplicateCount: number;
+  failedCount: number;
+  skippedCount: number;
+  errors: string[];
 }
 
 export interface LeadImportPreview {
@@ -121,12 +123,15 @@ export interface LeadImportPreview {
   unknownColumns: string[];
   previewRows: { [key: string]: string }[];
   totalRows: number;
+  validRows: number;
+  invalidRows: number;
+  duplicateRows: number;
   warnings: string[];
 }
+
 export interface LeadNoteRequest {
   content: string;
 }
-
 
 @Injectable({
   providedIn: 'root'
@@ -136,15 +141,26 @@ export class LeadService {
   private readonly apiUrl = 'https://api.hexafin.cloud/api/leads';
   private readonly adminUrl = 'https://api.hexafin.cloud/api/admin';
 
-  constructor(private http: HttpClient,
-    
-  ) {}
+  constructor(private http: HttpClient) {}
+
+  // AUTH HEADERS
+  private getAuthHeaders(): HttpHeaders {
+    const token = localStorage.getItem('token') || '';
+
+    return new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+  }
+
   // ==========================================
-  // ✅ ACTIVITY API METHODS
+  // ACTIVITY API METHODS
   // ==========================================
 
-  // 1. नवीन ॲक्टिव्हिटी तयार करण्यासाठी
-  createActivity(leadId: number, request: CreateActivityRequest): Observable<LeadActivity> {
+  createActivity(
+    leadId: number,
+    request: CreateActivityRequest
+  ): Observable<LeadActivity> {
     return this.http.post<LeadActivity>(
       `${this.apiUrl}/${leadId}/activities`,
       request,
@@ -152,8 +168,10 @@ export class LeadService {
     );
   }
 
- 
-  updateActivity(activityId: number, request: CreateActivityRequest): Observable<LeadActivity> {
+  updateActivity(
+    activityId: number,
+    request: CreateActivityRequest
+  ): Observable<LeadActivity> {
     return this.http.put<LeadActivity>(
       `${this.apiUrl}/activities/${activityId}`,
       request,
@@ -161,124 +179,115 @@ export class LeadService {
     );
   }
 
-getLeadsByAssignedTo(userId: number): Observable<Lead[]> {
-  return this.http.get<Lead[]>(
-    `${this.apiUrl}/assigned-to/${userId}`,
-    { headers: this.getAuthHeaders() }
-  );
-}
-getLeadsAssignedToUser(userId: number): Observable<Lead[]> {
-  return this.http.get<Lead[]>(
-    `https://api.hexafin.cloud/api/leads/assigned-to/${userId}`,
-    { headers: this.getAuthHeaders() }
-  );
-}
-  // 3. ॲक्टिव्हिटी डिलीट करण्यासाठी
+  getLeadsByAssignedTo(userId: number): Observable<Lead[]> {
+    return this.http.get<Lead[]>(
+      `${this.apiUrl}/assigned-to/${userId}`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  getLeadsAssignedToUser(userId: number): Observable<Lead[]> {
+    return this.http.get<Lead[]>(
+      `${this.apiUrl}/assigned-to/${userId}`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
   deleteActivity(activityId: number): Observable<void> {
     return this.http.delete<void>(
       `${this.apiUrl}/activities/${activityId}`,
       { headers: this.getAuthHeaders() }
     );
   }
-  // 🔥 JWT Token Header
-  private getAuthHeaders(): HttpHeaders {
-    const token = localStorage.getItem('token') || '';
-    return new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    });
+
+  // ==========================================
+  // LEAD STATUS APIs
+  // ==========================================
+
+  updateLeadStatus(leadId: number, status: string): Observable<any> {
+    return this.http.put<any>(
+      `${this.apiUrl}/${leadId}/status`,
+      { status },
+      { headers: this.getAuthHeaders() }
+    );
   }
 
-// ✅ 1. Lead चा Status बदलण्यासाठी
-updateLeadStatus(leadId: number, status: string): Observable<any> {
-  return this.http.put<any>(                 // ← put → patch
-    `${this.apiUrl}/${leadId}/status`,
-    { status: status },
-    { headers: this.getAuthHeaders() }
-  );
-}
+  getStatusHistory(leadId: number): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.apiUrl}/${leadId}/status-history`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
 
+  // ==========================================
+  // RAW LEAD MANAGEMENT APIs
+  // ==========================================
 
-// ✅ 2. Lead ची Status History
-getStatusHistory(leadId: number): Observable<any[]> {
-  return this.http.get<any[]>(
-    `${this.apiUrl}/${leadId}/status-history`,
-    { headers: this.getAuthHeaders() }
-  );
-}
-// ==========================================
-// RAW LEAD MANAGEMENT APIs
-// ==========================================
+  getRawLeads(): Observable<RawLead[]> {
+    return this.http.get<RawLead[]>(
+      `${this.apiUrl}/raw`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
 
-// 1. Get All Raw Leads
-getRawLeads(): Observable<RawLead[]> {
-  return this.http.get<RawLead[]>(
-    `${this.apiUrl}/raw`,
-    { headers: this.getAuthHeaders() }
-  );
-}
+  getRawLeadsByStatus(status: LeadImportStatus): Observable<RawLead[]> {
+    return this.http.get<RawLead[]>(
+      `${this.apiUrl}/raw/status/${status}`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
 
-// 2. Get Raw Leads By Import Status
-getRawLeadsByStatus(
-  status: LeadImportStatus
-): Observable<RawLead[]> {
-  return this.http.get<RawLead[]>(
-    `${this.apiUrl}/raw/status/${status}`,
-    { headers: this.getAuthHeaders() }
-  );
-}
+  getRawLeadsCount(): Observable<number> {
+    return this.http.get<number>(
+      `${this.apiUrl}/raw/count`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
 
-// 3. Get Raw Leads Count
-getRawLeadsCount(): Observable<number> {
-  return this.http.get<number>(
-    `${this.apiUrl}/raw/count`,
-    { headers: this.getAuthHeaders() }
-  );
-}
+  // ==========================================
+  // SMART LEAD IMPORT APIs
+  // ==========================================
 
-// 4. Preview Excel / CSV Before Import
-previewRawLeadImport(file: File): Observable<LeadImportPreview> {
-  const formData = new FormData();
-  formData.append('file', file);
+  // PREVIEW EXCEL / CSV
+  previewRawLeadImport(file: File): Observable<LeadImportPreview> {
+    const formData = new FormData();
+    formData.append('file', file);
 
-  const token = localStorage.getItem('token') || '';
+    const token = localStorage.getItem('token') || '';
 
-  const headers = new HttpHeaders({
-    Authorization: `Bearer ${token}`
-  });
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`
+    });
 
-  return this.http.post<LeadImportPreview>(
-    `${this.apiUrl}/import/preview`,
-    formData,
-    { headers }
-  );
-}
+    return this.http.post<LeadImportPreview>(
+      `${this.apiUrl}/import/preview`,
+      formData,
+      { headers }
+    );
+  }
 
-// ==========================================
-// SAVE EXCEL / CSV DATA INTO DATABASE
-// ==========================================
+  // SAVE IMPORT DATA
+  saveRawLeadImport(file: File): Observable<LeadImportSaveResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
 
-saveRawLeadImport(file: File): Observable<LeadImportSaveResponse> {
+    const token = localStorage.getItem('token') || '';
 
-  const formData = new FormData();
-  formData.append('file', file);
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`
+    });
 
-  const token = localStorage.getItem('token') || '';
+    return this.http.post<LeadImportSaveResponse>(
+      `${this.apiUrl}/import/save-raw`,
+      formData,
+      { headers }
+    );
+  }
 
-  const headers = new HttpHeaders({
-    Authorization: `Bearer ${token}`
-  });
+  // ==========================================
+  // LEAD LIST APIs
+  // ==========================================
 
-  return this.http.post<LeadImportSaveResponse>(
-    `${this.apiUrl}/import/save-raw`,
-    formData,
-    { headers }
-  );
-}
-
-  // =========================================
-  // GET — Sales User चे स्वतःचे Leads
-  // =========================================
   getMyLeads(): Observable<Lead[]> {
     return this.http.get<Lead[]>(
       `${this.apiUrl}/my-leads`,
@@ -286,9 +295,6 @@ saveRawLeadImport(file: File): Observable<LeadImportSaveResponse> {
     );
   }
 
-  // =========================================
-  // GET — Admin/Manager/Team Lead: Sales User चे Leads
-  // =========================================
   getLeadsBySalesUser(userId: number): Observable<Lead[]> {
     return this.http.get<Lead[]>(
       `${this.apiUrl}/sales-user/${userId}`,
@@ -296,9 +302,6 @@ saveRawLeadImport(file: File): Observable<LeadImportSaveResponse> {
     );
   }
 
-  // =========================================
-  // GET — सगळे Leads
-  // =========================================
   getAllLeads(): Observable<Lead[]> {
     return this.http.get<Lead[]>(
       this.apiUrl,
@@ -306,9 +309,6 @@ saveRawLeadImport(file: File): Observable<LeadImportSaveResponse> {
     );
   }
 
-  // =========================================
-  // GET — एक Lead
-  // =========================================
   getLeadById(id: number): Observable<Lead> {
     return this.http.get<Lead>(
       `${this.apiUrl}/${id}`,
@@ -316,9 +316,6 @@ saveRawLeadImport(file: File): Observable<LeadImportSaveResponse> {
     );
   }
 
-  // =========================================
-  // GET — Lead Activities
-  // =========================================
   getActivitiesByLeadId(leadId: number): Observable<LeadActivity[]> {
     return this.http.get<LeadActivity[]>(
       `${this.apiUrl}/${leadId}/activities`,
@@ -326,9 +323,10 @@ saveRawLeadImport(file: File): Observable<LeadImportSaveResponse> {
     );
   }
 
-  // =========================================
-  // GET — Sales Users List (Admin)
-  // =========================================
+  // ==========================================
+  // SALES USERS APIs
+  // ==========================================
+
   getSalesUsers(): Observable<SalesUser[]> {
     return this.http.get<SalesUser[]>(
       `${this.adminUrl}/sales-users`,
@@ -336,9 +334,6 @@ saveRawLeadImport(file: File): Observable<LeadImportSaveResponse> {
     );
   }
 
-  // =========================================
-  // GET — Sales User चे Leads (Admin API)
-  // =========================================
   getSalesUserLeads(userId: number): Observable<Lead[]> {
     return this.http.get<Lead[]>(
       `${this.adminUrl}/sales-users/${userId}/leads`,
@@ -346,9 +341,10 @@ saveRawLeadImport(file: File): Observable<LeadImportSaveResponse> {
     );
   }
 
-  // =========================================
-  // PUT — Lead Assign
-  // =========================================
+  // ==========================================
+  // LEAD ASSIGNMENT
+  // ==========================================
+
   assignLead(leadId: number, assignedToId: number): Observable<Lead> {
     return this.http.put<Lead>(
       `${this.apiUrl}/${leadId}/assign/${assignedToId}`,
@@ -357,9 +353,10 @@ saveRawLeadImport(file: File): Observable<LeadImportSaveResponse> {
     );
   }
 
-  // =========================================
-  // POST — Create Lead
-  // =========================================
+  // ==========================================
+  // CREATE LEAD
+  // ==========================================
+
   createLead(request: CreateLeadRequest): Observable<Lead> {
     return this.http.post<Lead>(
       this.apiUrl,
@@ -368,16 +365,18 @@ saveRawLeadImport(file: File): Observable<LeadImportSaveResponse> {
     );
   }
 
-  // =========================================
-  // POST — Bulk Upload Leads
-  // =========================================
+  // ==========================================
+  // OLD BULK UPLOAD API
+  // ==========================================
+
   bulkUploadLeads(file: File): Observable<BulkUploadResponse> {
     const formData = new FormData();
     formData.append('file', file);
 
     const token = localStorage.getItem('token') || '';
+
     const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${token}`
     });
 
     return this.http.post<BulkUploadResponse>(
@@ -387,11 +386,10 @@ saveRawLeadImport(file: File): Observable<LeadImportSaveResponse> {
     );
   }
 
-  // =========================================
-  // ✅ NOTES API METHODS (नवीन ॲड केलेले)
-  // =========================================
+  // ==========================================
+  // NOTES API METHODS
+  // ==========================================
 
-  // 1. सगळ्या नोट्स आणण्यासाठी
   getNotesByLeadId(leadId: number): Observable<LeadNote[]> {
     return this.http.get<LeadNote[]>(
       `${this.apiUrl}/${leadId}/notes`,
@@ -399,9 +397,9 @@ saveRawLeadImport(file: File): Observable<LeadImportSaveResponse> {
     );
   }
 
-  // 2. नवीन नोट तयार करण्यासाठी
   createNote(leadId: number, content: string): Observable<LeadNote> {
     const body: LeadNoteRequest = { content };
+
     return this.http.post<LeadNote>(
       `${this.apiUrl}/${leadId}/notes`,
       body,
@@ -409,9 +407,9 @@ saveRawLeadImport(file: File): Observable<LeadImportSaveResponse> {
     );
   }
 
-  // 3. नोट अपडेट करण्यासाठी
   updateNote(noteId: number, content: string): Observable<LeadNote> {
     const body: LeadNoteRequest = { content };
+
     return this.http.put<LeadNote>(
       `${this.apiUrl}/notes/${noteId}`,
       body,
@@ -419,12 +417,11 @@ saveRawLeadImport(file: File): Observable<LeadImportSaveResponse> {
     );
   }
 
-  // 4. नोट डिलीट करण्यासाठी
   deleteNote(noteId: number): Observable<void> {
     return this.http.delete<void>(
       `${this.apiUrl}/notes/${noteId}`,
       { headers: this.getAuthHeaders() }
     );
   }
-  
+
 }
