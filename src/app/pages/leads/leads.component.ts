@@ -1,3 +1,4 @@
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -8,7 +9,8 @@ import { forkJoin } from 'rxjs';
 import {
   Lead,
   LeadService,
-  LoanProductType
+  LoanProductType,
+  PageResponse
 } from '../../services/lead.service';
 
 interface UserDto {
@@ -56,6 +58,14 @@ export class LeadsComponent implements OnInit {
     localStorage.getItem('role') ||
     ''
   ).toUpperCase();
+
+  // PAGINATION
+  currentPage = 0;
+  pageSize = 25;
+  totalElements = 0;
+  totalPages = 0;
+  isFirstPage = true;
+  isLastPage = true;
 
   // FILTER STATE
   activeTab: LeadTab = 'ALL';
@@ -160,6 +170,7 @@ export class LeadsComponent implements OnInit {
       }
 
       this.activeTab = 'ALL';
+      this.currentPage = 0;
       this.clearSelection();
 
       this.loadLeads();
@@ -204,36 +215,136 @@ export class LeadsComponent implements OnInit {
     return headers;
   }
 
-  // LOAD ALL LEADS
+  // LOAD PAGINATED LEADS
   loadLeads(): void {
 
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.leadService.getAllLeads().subscribe({
+    this.leadService
+      .getAllLeadsPage(this.currentPage, this.pageSize)
+      .subscribe({
 
-      next: (records: Lead[]) => {
+        next: (response: PageResponse<Lead>) => {
 
-        this.leads = records || [];
-        this.isLoading = false;
+          this.leads = response.content || [];
 
-        console.log('Leads API Response:', records);
+          this.totalElements = response.totalElements || 0;
+          this.totalPages = response.totalPages || 0;
 
-        console.log(
-          'RAW Leads:',
-          this.leads.filter(lead => this.isRawLead(lead))
-        );
-      },
+          this.currentPage = response.number ?? this.currentPage;
+          this.pageSize = response.size || this.pageSize;
 
-      error: (error) => {
+          this.isFirstPage = response.first;
+          this.isLastPage = response.last;
 
-        console.error('Load Leads Error:', error);
-        this.isLoading = false;
+          this.isLoading = false;
 
-        this.errorMessage =
-          'Failed to fetch leads. HTTP Status: ' + error.status;
-      }
-    });
+          // Remove selections which are not on the current page.
+          const currentIds = new Set(
+            this.leads.map(lead => lead.id)
+          );
+
+          this.selectedLeadIds.forEach(id => {
+            if (!currentIds.has(id)) {
+              this.selectedLeadIds.delete(id);
+            }
+          });
+
+          console.log('Paginated Leads Response:', response);
+          console.log('Current Page Leads:', this.leads);
+          console.log('Total Records:', this.totalElements);
+          console.log('Total Pages:', this.totalPages);
+        },
+
+        error: (error) => {
+
+          console.error('Load Leads Error:', error);
+
+          this.isLoading = false;
+
+          this.errorMessage =
+            'Failed to fetch leads. HTTP Status: ' + error.status;
+        }
+      });
+  }
+
+  // PAGINATION: NEXT PAGE
+  nextPage(): void {
+
+    if (this.isLastPage || this.isLoading) {
+      return;
+    }
+
+    this.currentPage++;
+    this.clearSelection();
+    this.loadLeads();
+  }
+
+  // PAGINATION: PREVIOUS PAGE
+  previousPage(): void {
+
+    if (this.isFirstPage || this.isLoading) {
+      return;
+    }
+
+    this.currentPage--;
+    this.clearSelection();
+    this.loadLeads();
+  }
+
+  // PAGINATION: FIRST PAGE
+  firstPage(): void {
+
+    if (this.currentPage === 0 || this.isLoading) {
+      return;
+    }
+
+    this.currentPage = 0;
+    this.clearSelection();
+    this.loadLeads();
+  }
+
+  // PAGINATION: LAST PAGE
+  lastPage(): void {
+
+    if (
+      this.totalPages === 0 ||
+      this.currentPage >= this.totalPages - 1 ||
+      this.isLoading
+    ) {
+      return;
+    }
+
+    this.currentPage = this.totalPages - 1;
+    this.clearSelection();
+    this.loadLeads();
+  }
+
+  // PAGINATION DISPLAY
+  get startRecord(): number {
+
+    if (this.totalElements === 0) {
+      return 0;
+    }
+
+    return this.currentPage * this.pageSize + 1;
+  }
+
+  get endRecord(): number {
+
+    return Math.min(
+      (this.currentPage + 1) * this.pageSize,
+      this.totalElements
+    );
+  }
+
+  // RESET PAGE WHEN FILTER CHANGES
+  onFiltersChanged(): void {
+
+    this.currentPage = 0;
+    this.clearSelection();
+    this.loadLeads();
   }
 
   // LOAD USERS
@@ -317,6 +428,7 @@ export class LeadsComponent implements OnInit {
     this.selectedProduct = 'ALL';
     this.activeTab = 'ALL';
     this.dashboardFilter = 'ALL';
+    this.currentPage = 0;
 
     const paths: Record<typeof view, string> = {
       ALL: '/leads/all',
@@ -330,7 +442,7 @@ export class LeadsComponent implements OnInit {
 
   // SUMMARY COUNTS
   get allLeadsCount(): number {
-    return this.leads.length;
+    return this.totalElements;
   }
 
   get rawLeadsCount(): number {
@@ -365,6 +477,7 @@ export class LeadsComponent implements OnInit {
     this.assignmentError = '';
     this.successMessage = '';
     this.activeTab = 'ALL';
+    this.currentPage = 0;
 
     if (product === 'ALL') {
       this.router.navigate(['/leads']);
@@ -387,6 +500,7 @@ export class LeadsComponent implements OnInit {
     this.selectedProduct = 'ALL';
     this.activeTab = 'ALL';
     this.dashboardFilter = 'ALL';
+    this.currentPage = 0;
 
     this.router.navigate(['/leads']);
   }
@@ -424,7 +538,9 @@ export class LeadsComponent implements OnInit {
 
   // SUMMARY TAB
   changeTab(tab: LeadTab): void {
+
     this.activeTab = tab;
+    this.currentPage = 0;
     this.clearSelection();
   }
 
@@ -522,8 +638,10 @@ export class LeadsComponent implements OnInit {
 
     this.searchText = '';
     this.selectedStatus = 'ALL';
+    this.selectedProduct = 'ALL';
     this.activeTab = 'ALL';
 
+    this.currentPage = 0;
     this.clearSelection();
   }
 
@@ -531,6 +649,8 @@ export class LeadsComponent implements OnInit {
   clearDashboardFilter(): void {
 
     this.dashboardFilter = 'ALL';
+
+    this.currentPage = 0;
 
     this.router.navigate([], {
       relativeTo: this.route,
@@ -568,7 +688,7 @@ export class LeadsComponent implements OnInit {
     }
   }
 
-  // SELECT ALL FILTERED LEADS
+  // SELECT ALL FILTERED LEADS ON CURRENT PAGE
   toggleAll(checked: boolean): void {
 
     const eligibleLeads = this.filteredLeads;

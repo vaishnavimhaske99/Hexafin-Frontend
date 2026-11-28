@@ -1,3 +1,4 @@
+
 <div class="leads-page">
 
   <!-- PAGE HEADER -->
@@ -331,6 +332,7 @@
         <input
           type="text"
           [(ngModel)]="searchText"
+          (ngModelChange)="onFiltersChanged()"
           placeholder="Search name, company, email, phone or city..."
         />
 
@@ -340,7 +342,9 @@
 
         <label>Enquiry Status</label>
 
-        <select [(ngModel)]="selectedStatus">
+        <select
+          [(ngModel)]="selectedStatus"
+          (ngModelChange)="onFiltersChanged()">
 
           <option value="ALL">All Statuses</option>
 
@@ -358,7 +362,9 @@
 
         <label>Loan Product</label>
 
-        <select [(ngModel)]="selectedProduct">
+        <select
+          [(ngModel)]="selectedProduct"
+          (ngModelChange)="onFiltersChanged()">
 
           <option value="ALL">All Products</option>
 
@@ -621,6 +627,55 @@
         </tbody>
 
       </table>
+
+    </section>
+
+    <!-- PAGINATION -->
+    <section
+      class="pagination-container"
+      *ngIf="!isLoading && totalElements > 0">
+
+      <div class="pagination-info">
+        Showing <strong>{{ startRecord }}</strong>
+        to <strong>{{ endRecord }}</strong>
+        of <strong>{{ totalElements }}</strong> enquiries
+      </div>
+
+      <div class="pagination-controls">
+
+        <button
+          class="btn btn-outline btn-sm"
+          [disabled]="isFirstPage || isLoading"
+          (click)="firstPage()">
+          First
+        </button>
+
+        <button
+          class="btn btn-outline btn-sm"
+          [disabled]="isFirstPage || isLoading"
+          (click)="previousPage()">
+          Previous
+        </button>
+
+        <span class="page-indicator">
+          Page {{ currentPage + 1 }} of {{ totalPages }}
+        </span>
+
+        <button
+          class="btn btn-outline btn-sm"
+          [disabled]="isLastPage || isLoading"
+          (click)="nextPage()">
+          Next
+        </button>
+
+        <button
+          class="btn btn-outline btn-sm"
+          [disabled]="isLastPage || isLoading"
+          (click)="lastPage()">
+          Last
+        </button>
+
+      </div>
 
     </section>
 

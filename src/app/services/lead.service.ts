@@ -5,7 +5,7 @@ import {
   HttpHeaders,
   HttpParams
 } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
 export type LoanProductType =
   | 'HOME_LOAN'
@@ -40,6 +40,22 @@ export interface Lead {
   assignedToName: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+// ==========================================
+// PAGINATION RESPONSE
+// ==========================================
+
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+  numberOfElements: number;
+  first: boolean;
+  last: boolean;
+  empty: boolean;
 }
 
 // ==========================================
@@ -212,6 +228,8 @@ export class LeadService {
   private readonly apiUrl = 'https://api.hexafin.cloud/api/leads';
   private readonly adminUrl = 'https://api.hexafin.cloud/api/admin';
 
+  private readonly defaultPageSize = 25;
+
   constructor(private http: HttpClient) {}
 
   // ==========================================
@@ -220,12 +238,30 @@ export class LeadService {
 
   private getAuthHeaders(): HttpHeaders {
 
-    const token = localStorage.getItem('token') || '';
+    const token =
+      localStorage.getItem('crm_token') ||
+      localStorage.getItem('token') ||
+      localStorage.getItem('jwt') ||
+      '';
 
     return new HttpHeaders({
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json'
     });
+  }
+
+  // ==========================================
+  // PAGINATION PARAMS
+  // ==========================================
+
+  private getPageParams(
+    page: number = 0,
+    size: number = this.defaultPageSize
+  ): HttpParams {
+
+    return new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
   }
 
   // ==========================================
@@ -258,17 +294,27 @@ export class LeadService {
 
   getLeadsByAssignedTo(userId: number): Observable<Lead[]> {
 
-    return this.http.get<Lead[]>(
-      `${this.apiUrl}/assigned-to/${userId}`,
-      { headers: this.getAuthHeaders() }
-    );
+    return this.getLeadsByAssignedToPage(userId)
+      .pipe(map(response => response.content));
   }
 
   getLeadsAssignedToUser(userId: number): Observable<Lead[]> {
 
-    return this.http.get<Lead[]>(
+    return this.getLeadsByAssignedTo(userId);
+  }
+
+  getLeadsByAssignedToPage(
+    userId: number,
+    page: number = 0,
+    size: number = this.defaultPageSize
+  ): Observable<PageResponse<Lead>> {
+
+    return this.http.get<PageResponse<Lead>>(
       `${this.apiUrl}/assigned-to/${userId}`,
-      { headers: this.getAuthHeaders() }
+      {
+        headers: this.getAuthHeaders(),
+        params: this.getPageParams(page, size)
+      }
     );
   }
 
@@ -305,21 +351,54 @@ export class LeadService {
   // RAW LEAD MANAGEMENT APIs
   // ==========================================
 
+  // OLD METHOD - FIRST PAGE ONLY
+
   getRawLeads(): Observable<RawLead[]> {
 
-    return this.http.get<RawLead[]>(
+    return this.getRawLeadsPage()
+      .pipe(map(response => response.content));
+  }
+
+  // NEW PAGINATED METHOD
+
+  getRawLeadsPage(
+    page: number = 0,
+    size: number = this.defaultPageSize
+  ): Observable<PageResponse<RawLead>> {
+
+    return this.http.get<PageResponse<RawLead>>(
       `${this.apiUrl}/raw`,
-      { headers: this.getAuthHeaders() }
+      {
+        headers: this.getAuthHeaders(),
+        params: this.getPageParams(page, size)
+      }
     );
   }
+
+  // OLD METHOD - FIRST PAGE ONLY
 
   getRawLeadsByStatus(
     status: LeadImportStatus
   ): Observable<RawLead[]> {
 
-    return this.http.get<RawLead[]>(
+    return this.getRawLeadsByStatusPage(status)
+      .pipe(map(response => response.content));
+  }
+
+  // NEW PAGINATED METHOD
+
+  getRawLeadsByStatusPage(
+    status: LeadImportStatus,
+    page: number = 0,
+    size: number = this.defaultPageSize
+  ): Observable<PageResponse<RawLead>> {
+
+    return this.http.get<PageResponse<RawLead>>(
       `${this.apiUrl}/raw/status/${status}`,
-      { headers: this.getAuthHeaders() }
+      {
+        headers: this.getAuthHeaders(),
+        params: this.getPageParams(page, size)
+      }
     );
   }
 
@@ -336,12 +415,17 @@ export class LeadService {
   // ==========================================
 
   // PREVIEW EXCEL / CSV
+
   previewRawLeadImport(file: File): Observable<LeadImportPreview> {
 
     const formData = new FormData();
     formData.append('file', file);
 
-    const token = localStorage.getItem('token') || '';
+    const token =
+      localStorage.getItem('crm_token') ||
+      localStorage.getItem('token') ||
+      localStorage.getItem('jwt') ||
+      '';
 
     const headers = new HttpHeaders({
       Authorization: `Bearer ${token}`
@@ -355,12 +439,17 @@ export class LeadService {
   }
 
   // SAVE IMPORT DATA
+
   saveRawLeadImport(file: File): Observable<LeadImportSaveResponse> {
 
     const formData = new FormData();
     formData.append('file', file);
 
-    const token = localStorage.getItem('token') || '';
+    const token =
+      localStorage.getItem('crm_token') ||
+      localStorage.getItem('token') ||
+      localStorage.getItem('jwt') ||
+      '';
 
     const headers = new HttpHeaders({
       Authorization: `Bearer ${token}`
@@ -383,9 +472,7 @@ export class LeadService {
     size: number = 25
   ): Observable<ImportBatchResponse> {
 
-    const params = new HttpParams()
-      .set('page', page)
-      .set('size', size);
+    const params = this.getPageParams(page, size);
 
     return this.http.get<ImportBatchResponse>(
       `${this.apiUrl}/import-batches/${batchId}/leads`,
@@ -400,27 +487,92 @@ export class LeadService {
   // LEAD LIST APIs
   // ==========================================
 
+  // OLD METHOD - FIRST PAGE ONLY
+
   getMyLeads(): Observable<Lead[]> {
 
-    return this.http.get<Lead[]>(
+    return this.getMyLeadsPage()
+      .pipe(map(response => response.content));
+  }
+
+  // NEW PAGINATED METHOD
+
+  getMyLeadsPage(
+    page: number = 0,
+    size: number = this.defaultPageSize
+  ): Observable<PageResponse<Lead>> {
+
+    return this.http.get<PageResponse<Lead>>(
       `${this.apiUrl}/my-leads`,
-      { headers: this.getAuthHeaders() }
+      {
+        headers: this.getAuthHeaders(),
+        params: this.getPageParams(page, size)
+      }
     );
   }
+
+  // OLD METHOD - FIRST PAGE ONLY
 
   getLeadsBySalesUser(userId: number): Observable<Lead[]> {
 
-    return this.http.get<Lead[]>(
+    return this.getLeadsBySalesUserPage(userId)
+      .pipe(map(response => response.content));
+  }
+
+  // NEW PAGINATED METHOD
+
+  getLeadsBySalesUserPage(
+    userId: number,
+    page: number = 0,
+    size: number = this.defaultPageSize
+  ): Observable<PageResponse<Lead>> {
+
+    return this.http.get<PageResponse<Lead>>(
       `${this.apiUrl}/sales-user/${userId}`,
-      { headers: this.getAuthHeaders() }
+      {
+        headers: this.getAuthHeaders(),
+        params: this.getPageParams(page, size)
+      }
     );
   }
 
+  // OLD METHOD - FIRST PAGE ONLY
+
   getAllLeads(): Observable<Lead[]> {
 
-    return this.http.get<Lead[]>(
+    return this.getAllLeadsPage()
+      .pipe(map(response => response.content));
+  }
+
+  // NEW PAGINATED METHOD
+
+  getAllLeadsPage(
+    page: number = 0,
+    size: number = this.defaultPageSize
+  ): Observable<PageResponse<Lead>> {
+
+    return this.http.get<PageResponse<Lead>>(
       this.apiUrl,
-      { headers: this.getAuthHeaders() }
+      {
+        headers: this.getAuthHeaders(),
+        params: this.getPageParams(page, size)
+      }
+    );
+  }
+
+  // TEAM LEADS - PAGINATED
+
+  getTeamLeadsPage(
+    page: number = 0,
+    size: number = this.defaultPageSize
+  ): Observable<PageResponse<Lead>> {
+
+    return this.http.get<PageResponse<Lead>>(
+      `${this.apiUrl}/team-leads`,
+      {
+        headers: this.getAuthHeaders(),
+        params: this.getPageParams(page, size)
+      }
     );
   }
 
@@ -462,7 +614,6 @@ export class LeadService {
 
   // ==========================================
   // LEAD ASSIGNMENT
-  // EXISTING API - KEEP UNCHANGED
   // ==========================================
 
   assignLead(
@@ -499,7 +650,11 @@ export class LeadService {
     const formData = new FormData();
     formData.append('file', file);
 
-    const token = localStorage.getItem('token') || '';
+    const token =
+      localStorage.getItem('crm_token') ||
+      localStorage.getItem('token') ||
+      localStorage.getItem('jwt') ||
+      '';
 
     const headers = new HttpHeaders({
       Authorization: `Bearer ${token}`
